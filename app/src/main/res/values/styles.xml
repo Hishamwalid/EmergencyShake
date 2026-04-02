@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="CalcButtonNum">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_columnWeight">1</item>
+        <item name="android:textSize">24sp</item>
+    </style>
+</resources>
+EOf
+# Create directories
+mkdir -p app/src/main/java/com/example/silentemergency/ui
+mkdir -p app/src/main/java/com/example/silentemergency/service
+mkdir -p app/src/main/java/com/example/silentemergency/helper
+mkdir -p app/src/main/java/com/example/silentemergency/utils
+mkdir -p app/src/main/res/layout
+mkdir -p app/src/main/res/menu
+
+# Create Java placeholder files
+echo "package com.example.silentemergency.ui;" > app/src/main/java/com/example/silentemergency/ui/CalculatorActivity.java
+echo "package com.example.silentemergency.ui;" > app/src/main/java/com/example/silentemergency/ui/SettingsActivity.java
+echo "package com.example.silentemergency.service;" > app/src/main/java/com/example/silentemergency/service/EmergencyService.java
+echo "package com.example.silentemergency.service;" > app/src/main/java/com/example/silentemergency/service/ShakeDetector.java
+echo "package com.example.silentemergency.helper;" > app/src/main/java/com/example/silentemergency/helper/LocationHelper.java
+echo "package com.example.silentemergency.helper;" > app/src/main/java/com/example/silentemergency/helper/SmsHelper.java
+echo "package com.example.silentemergency.helper;" > app/src/main/java/com/example/silentemergency/helper/CallHelper.java
+echo "package com.example.silentemergency.utils;" > app/src/main/java/com/example/silentemergency/utils/PrefManager.java
+echo "package com.example.silentemergency;" > app/src/main/java/com/example/silentemergency/EmergencyHandler.java
+echo "package com.example.silentemergency;" > app/src/main/java/com/example/silentemergency/FirstTimeSetupActivity.java
+
+# Create XML placeholder files
+echo "<!-- placeholder -->" > app/src/main/res/layout/activity_calculator.xml
+echo "<!-- placeholder -->" > app/src/main/res/layout/activity_settings.xml
+echo "<!-- placeholder -->" > app/src/main/res/layout/activity_first_time_setup.xml
+echo "<!-- placeholder -->" > app/src/main/res/layout/dialog_change_password.xml
+echo '<?xml version="1.0" encoding="utf-8"?><menu/>' > app/src/main/res/menu/menu_calculator.xml
+
+# Create minimal styles.xml
+mkdir -p app/src/main/res/values
+cat > app/src/main/res/values/styles.xml << 'EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="CalcButtonNum">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_columnWeight">1</item>
+        <item name="android:textSize">24sp</item>
+    </style>
+</resources>
