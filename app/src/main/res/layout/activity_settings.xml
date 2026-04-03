@@ -7,4 +7,5 @@
     <TextView android:text="Emergency Contact" android:textStyle="bold" android:layout_marginTop="16dp"/>
     <EditText android:id="@+id/etContact" android:hint="Phone number" android:inputType="phone" android:layout_marginBottom="8dp"/>
     <Button android:id="@+id/btnSaveContact" android:text="Save Contact"/>
+    <Switch android:id="@+id/swDarkMode" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Dark Mode" android:layout_marginTop="24dp"/>
 </LinearLayout>

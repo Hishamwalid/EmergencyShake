@@ -5,11 +5,18 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <ImageView
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:src="@mipmap/ic_launcher"
+        android:layout_gravity="center"
+        android:layout_marginBottom="16dp"/>
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="First Time Setup"
-        android:textSize="24sp"
+        android:text="Ecalculator"
+        android:textSize="28sp"
         android:textStyle="bold"
         android:layout_gravity="center"
         android:layout_marginBottom="32dp"/>
@@ -17,41 +24,51 @@
     <EditText
         android:id="@+id/etPassword"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="56dp"
         android:hint="Enter Password"
         android:inputType="textPassword"
+        android:background="@drawable/bg_soft_rounded"
+        android:paddingStart="20dp"
         android:layout_marginBottom="16dp"/>
 
     <EditText
         android:id="@+id/etConfirmPassword"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="56dp"
         android:hint="Confirm Password"
         android:inputType="textPassword"
-        android:layout_marginBottom="16dp"/>
+        android:background="@drawable/bg_soft_rounded"
+        android:paddingStart="20dp"
+        android:layout_marginBottom="24dp"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Security Question"
+        android:textStyle="bold"
         android:layout_marginBottom="8dp"/>
 
     <Spinner
         android:id="@+id/spQuestions"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="56dp"
+        android:background="@drawable/bg_soft_rounded"
         android:layout_marginBottom="16dp"/>
 
     <EditText
         android:id="@+id/etAnswer"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="56dp"
         android:hint="Your Answer"
+        android:background="@drawable/bg_soft_rounded"
+        android:paddingStart="20dp"
         android:layout_marginBottom="32dp"/>
 
     <Button
         android:id="@+id/btnSave"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Complete Setup"/>
+        android:layout_height="52dp"
+        android:text="Complete Setup"
+        android:background="@drawable/btn_modern_primary"
+        android:textColor="#FFFFFF"/>
 </LinearLayout>

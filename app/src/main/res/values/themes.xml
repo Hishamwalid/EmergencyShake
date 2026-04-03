@@ -1,9 +1,38 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.SilentEmergencyApp" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme_Light" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowBackground">#F5F5F5</item>
+        <item name="colorPrimary">#2196F3</item>
+        <item name="colorPrimaryDark">#1976D2</item>
+        <item name="colorAccent">#FF9800</item>
+        <item name="calcDisplayBackground">#FFFFFF</item>
+        <item name="calcDisplayTextColor">#000000</item>
+        <item name="calcButtonNumBackground">#E9ECEF</item>
+        <item name="calcButtonNumTextColor">#212529</item>
+        <item name="calcButtonOpBackground">#FF9800</item>
+        <item name="calcButtonOpTextColor">#FFFFFF</item>
+        <item name="calcButtonGrayBackground">#DEE2E6</item>
+        <item name="calcButtonGrayTextColor">#495057</item>
+        <item name="calcHistoryTextColor">#6C757D</item>
+        <item name="calcHistoryBackground">#EEEEEE</item>
+        <!-- popupMenuBackground line removed -->
     </style>
 
-    <style name="Theme.SilentEmergencyApp" parent="Base.Theme.SilentEmergencyApp" />
+    <style name="AppTheme_Dark" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">#121212</item>
+        <item name="colorPrimary">#1E1E1E</item>
+        <item name="colorPrimaryDark">#0D0D0D</item>
+        <item name="colorAccent">#FF9800</item>
+        <item name="calcDisplayBackground">#1E1E1E</item>
+        <item name="calcDisplayTextColor">#FFFFFF</item>
+        <item name="calcButtonNumBackground">#2C2C2C</item>
+        <item name="calcButtonNumTextColor">#FFFFFF</item>
+        <item name="calcButtonOpBackground">#FF9800</item>
+        <item name="calcButtonOpTextColor">#FFFFFF</item>
+        <item name="calcButtonGrayBackground">#3A3A3A</item>
+        <item name="calcButtonGrayTextColor">#A0A0A0</item>
+        <item name="calcHistoryTextColor">#AAAAAA</item>
+        <item name="calcHistoryBackground">#2A2A2A</item>
+        <!-- popupMenuBackground line removed -->
+    </style>
 </resources>

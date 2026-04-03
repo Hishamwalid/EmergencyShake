@@ -3,56 +3,108 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F0F0F0">
+    android:background="?android:windowBackground">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="#2196F3"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
+        android:background="?attr/colorPrimary"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark">
 
-    <EditText
-        android:id="@+id/display"
-        android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:textSize="32sp"
-        android:gravity="end|center_vertical"
-        android:padding="16dp"
-        android:background="#FFFFFF"
-        android:text="0"
-        android:enabled="false" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
 
-    <GridLayout
+            <ImageButton
+                android:id="@+id/historyButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@android:drawable/ic_menu_recent_history"
+                android:background="@android:color/transparent"
+                android:scaleType="centerInside"
+                android:layout_gravity="center_vertical" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+        </LinearLayout>
+    </androidx.appcompat.widget.Toolbar>
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:rowCount="5"
-        android:columnCount="4"
-        android:layout_margin="8dp">
+        android:orientation="vertical"
+        android:gravity="bottom">
 
-        <Button style="@style/CalcButtonGray" android:text="AC" android:onClick="onClearClick" />
-        <Button style="@style/CalcButtonGray" android:text="%" android:onClick="onPercentClick" />
-        <Button style="@style/CalcButtonOp" android:text="÷" android:onClick="onOperatorClick" />
-        <Button style="@style/CalcButtonOp" android:text="×" android:onClick="onOperatorClick" />
+        <TextView
+            android:id="@+id/preview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="?attr/calcHistoryTextColor"
+            android:padding="12dp"
+            android:paddingBottom="4dp"
+            android:gravity="end"
+            android:alpha="0.6" />
 
-        <Button style="@style/CalcButtonNum" android:text="7" android:onClick="onNumberClick" />
-        <Button style="@style/CalcButtonNum" android:text="8" android:onClick="onNumberClick" />
-        <Button style="@style/CalcButtonNum" android:text="9" android:onClick="onNumberClick" />
-        <Button style="@style/CalcButtonOp" android:text="−" android:onClick="onOperatorClick" />
+        <EditText
+            android:id="@+id/display"
+            android:layout_width="match_parent"
+            android:layout_height="70dp"
+            android:textSize="28sp"
+            android:gravity="end|center_vertical"
+            android:padding="12dp"
+            android:background="?attr/calcDisplayBackground"
+            android:textColor="?attr/calcDisplayTextColor"
+            android:text="0"
+            android:enabled="false"
+            android:singleLine="true"
+            android:ellipsize="start" />
+    </LinearLayout>
 
-        <Button style="@style/CalcButtonNum" android:text="4" android:onClick="onNumberClick" />
-        <Button style="@style/CalcButtonNum" android:text="5" android:onClick="onNumberClick" />
-        <Button style="@style/CalcButtonNum" android:text="6" android:onClick="onNumberClick" />
-        <Button style="@style/CalcButtonOp" android:text="+" android:onClick="onOperatorClick" />
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:stretchColumns="*"
+        android:shrinkColumns="*"
+        android:layout_margin="8dp"
+        android:layout_marginTop="8dp">
 
-        <Button style="@style/CalcButtonNum" android:text="1" android:onClick="onNumberClick" />
-        <Button style="@style/CalcButtonNum" android:text="2" android:onClick="onNumberClick" />
-        <Button style="@style/CalcButtonNum" android:text="3" android:onClick="onNumberClick" />
-        <Button style="@style/CalcButtonOp" android:text="=" android:onClick="onEqualClick" android:layout_rowSpan="2"/>
-
-        <Button style="@style/CalcButtonNum" android:text="0" android:onClick="onNumberClick" />
-        <Button style="@style/CalcButtonNum" android:text="." android:onClick="onNumberClick" />
-
-    </GridLayout>
+        <TableRow>
+            <Button style="@style/CalcButtonGray" android:text="C" android:onClick="onClearClick" />
+            <Button style="@style/CalcButtonGray" android:text="⌫" android:onClick="onBackspaceClick" />
+            <Button style="@style/CalcButtonGray" android:text="%" android:onClick="onPercentClick" />
+            <Button style="@style/CalcButtonOp" android:text="÷" android:onClick="onOperatorClick" />
+        </TableRow>
+        <TableRow>
+            <Button style="@style/CalcButtonNum" android:text="7" android:onClick="onNumberClick" />
+            <Button style="@style/CalcButtonNum" android:text="8" android:onClick="onNumberClick" />
+            <Button style="@style/CalcButtonNum" android:text="9" android:onClick="onNumberClick" />
+            <Button style="@style/CalcButtonOp" android:text="×" android:onClick="onOperatorClick" />
+        </TableRow>
+        <TableRow>
+            <Button style="@style/CalcButtonNum" android:text="4" android:onClick="onNumberClick" />
+            <Button style="@style/CalcButtonNum" android:text="5" android:onClick="onNumberClick" />
+            <Button style="@style/CalcButtonNum" android:text="6" android:onClick="onNumberClick" />
+            <Button style="@style/CalcButtonOp" android:text="−" android:onClick="onOperatorClick" />
+        </TableRow>
+        <TableRow>
+            <Button style="@style/CalcButtonNum" android:text="1" android:onClick="onNumberClick" />
+            <Button style="@style/CalcButtonNum" android:text="2" android:onClick="onNumberClick" />
+            <Button style="@style/CalcButtonNum" android:text="3" android:onClick="onNumberClick" />
+            <Button style="@style/CalcButtonOp" android:text="+" android:onClick="onOperatorClick" />
+        </TableRow>
+        <!-- Symmetric bottom row: √, 0, ., = -->
+        <TableRow>
+            <Button style="@style/CalcButtonOp" android:text="√" android:onClick="onSquareRootClick" />
+            <Button style="@style/CalcButtonNum" android:text="0" android:onClick="onNumberClick" />
+            <Button style="@style/CalcButtonNum" android:text="." android:onClick="onNumberClick" />
+            <Button style="@style/CalcButtonOp" android:text="=" android:onClick="onEqualClick" />
+        </TableRow>
+    </TableLayout>
 </LinearLayout>

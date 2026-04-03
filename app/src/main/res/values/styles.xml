@@ -1,35 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Calculator number buttons (white background) -->
     <style name="CalcButtonNum">
         <item name="android:layout_width">0dp</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_columnWeight">1</item>
-        <item name="android:layout_rowWeight">1</item>
-        <item name="android:textSize">24sp</item>
-        <item name="android:background">#FFFFFF</item>
-        <item name="android:textColor">#000000</item>
+        <item name="android:layout_height">60dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:background">@drawable/btn_rounded_num</item>
+        <item name="android:textColor">?attr/calcButtonNumTextColor</item>
+        <item name="android:gravity">center</item>
+        <item name="android:layout_margin">4dp</item>
     </style>
 
-    <!-- Calculator operator buttons (orange background) -->
     <style name="CalcButtonOp">
         <item name="android:layout_width">0dp</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_columnWeight">1</item>
-        <item name="android:layout_rowWeight">1</item>
-        <item name="android:textSize">24sp</item>
-        <item name="android:background">#FF9800</item>
-        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:layout_height">60dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:background">@drawable/btn_rounded_op</item>
+        <item name="android:textColor">?attr/calcButtonOpTextColor</item>
+        <item name="android:gravity">center</item>
+        <item name="android:layout_margin">4dp</item>
     </style>
 
-    <!-- Calculator function buttons (gray background: AC, %) -->
     <style name="CalcButtonGray">
         <item name="android:layout_width">0dp</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_columnWeight">1</item>
-        <item name="android:layout_rowWeight">1</item>
-        <item name="android:textSize">24sp</item>
-        <item name="android:background">#E0E0E0</item>
-        <item name="android:textColor">#000000</item>
+        <item name="android:layout_height">60dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:background">@drawable/btn_rounded_gray</item>
+        <item name="android:textColor">?attr/calcButtonGrayTextColor</item>
+        <item name="android:gravity">center</item>
+        <item name="android:layout_margin">4dp</item>
+    </style>
+
+    <style name="TransparentDialogTheme" parent="Theme.AppCompat.Dialog">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">true</item>
     </style>
 </resources>

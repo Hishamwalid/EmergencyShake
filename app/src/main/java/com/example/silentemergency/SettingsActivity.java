@@ -7,6 +7,7 @@ import com.example.silentemergency.utils.PrefManager;
 
 public class SettingsActivity extends AppCompatActivity {
     private EditText etContact;
+    private Switch swDarkMode;
     private Button btnSaveContact;
     private PrefManager prefManager;
 
@@ -17,11 +18,16 @@ public class SettingsActivity extends AppCompatActivity {
         prefManager = new PrefManager(this);
         etContact = findViewById(R.id.etContact);
         btnSaveContact = findViewById(R.id.btnSaveContact);
+        swDarkMode = findViewById(R.id.swDarkMode);
         etContact.setText(prefManager.getEmergencyNumber());
+        swDarkMode.setChecked(prefManager.isDarkMode());
+        swDarkMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            prefManager.setDarkMode(isChecked);
+            recreate();
+        });
         btnSaveContact.setOnClickListener(v -> {
-            String number = etContact.getText().toString().trim();
-            prefManager.setEmergencyNumber(number);
-            Toast.makeText(this, "Emergency contact saved", Toast.LENGTH_SHORT).show();
+            prefManager.setEmergencyNumber(etContact.getText().toString().trim());
+            Toast.makeText(this, "Contact saved", Toast.LENGTH_SHORT).show();
         });
     }
 }
