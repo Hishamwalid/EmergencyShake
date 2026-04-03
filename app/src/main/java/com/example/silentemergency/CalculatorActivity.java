@@ -1,19 +1,15 @@
 package com.example.silentemergency;
 
-import android.app.AlertDialog;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -26,6 +22,8 @@ import java.util.List;
 public class CalculatorActivity extends AppCompatActivity {
     private EditText display;
     private TextView preview;
+    private LinearLayout historyContainer;
+    private ScrollView historyScroll;
     private PrefManager prefManager;
     private List<String> historyEntries = new ArrayList<>();
 
@@ -49,9 +47,8 @@ public class CalculatorActivity extends AppCompatActivity {
 
         display = findViewById(R.id.display);
         preview = findViewById(R.id.preview);
-        ImageButton historyButton = findViewById(R.id.historyButton);
-
-        historyButton.setOnClickListener(v -> showHistoryDialog());
+        historyContainer = findViewById(R.id.historyContainer);
+        historyScroll = findViewById(R.id.historyScroll);
 
         if (prefManager.isFirstTime()) {
             startActivity(new Intent(this, FirstTimeSetupActivity.class));
@@ -61,62 +58,54 @@ public class CalculatorActivity extends AppCompatActivity {
         updateDisplay();
     }
 
-    private void showHistoryDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.TransparentDialogTheme);
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_history, null);
-        LinearLayout historyList = dialogView.findViewById(R.id.historyList);
-        Button closeButton = dialogView.findViewById(R.id.closeHistoryButton);
+    private void addToHistory(String expr, String result) {
+        historyEntries.add(0, expr + " = " + result);
+        if (historyEntries.size() > 20) historyEntries.remove(historyEntries.size() - 1);
+        updateHistoryUI();
+        historyScroll.post(() -> historyScroll.fullScroll(View.FOCUS_UP));
+    }
 
-        historyList.removeAllViews();
+    private void clearHistory() {
+        historyEntries.clear();
+        updateHistoryUI();
+    }
+
+    private void updateHistoryUI() {
+        historyContainer.removeAllViews();
         if (historyEntries.isEmpty()) {
             TextView empty = new TextView(this);
             empty.setText("No calculations yet");
             empty.setPadding(16, 16, 16, 16);
             empty.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
-            historyList.addView(empty);
+            empty.setTextSize(14);
+            empty.setGravity(Gravity.END);  // right-align
+            historyContainer.addView(empty);
         } else {
             for (String entry : historyEntries) {
                 TextView tv = new TextView(this);
                 tv.setText(entry);
                 tv.setTextSize(16);
-                tv.setTextColor(ContextCompat.getColor(this, android.R.color.black));
-                tv.setPadding(16, 12, 16, 12);
-                historyList.addView(tv);
+                tv.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
+                tv.setPadding(8, 6, 8, 6);
+                tv.setGravity(Gravity.END);  // right-align
+                historyContainer.addView(tv);
             }
         }
-
-        builder.setView(dialogView);
-        AlertDialog dialog = builder.create();
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            WindowManager.LayoutParams params = dialog.getWindow().getAttributes();
-            params.width = WindowManager.LayoutParams.MATCH_PARENT;
-            params.height = WindowManager.LayoutParams.WRAP_CONTENT;
-            dialog.getWindow().setAttributes(params);
-            dialog.getWindow().setGravity(Gravity.CENTER);
-        }
-        closeButton.setOnClickListener(v -> dialog.dismiss());
-        dialog.show();
     }
 
-    private void addToHistory(String expr, String result) {
-        historyEntries.add(0, expr + " = " + result);
-        if (historyEntries.size() > 10) historyEntries.remove(historyEntries.size() - 1);
-    }
-
-    // Square Root Button: appends "√("
-    public void onSquareRootClick(View view) {
+    // ---------- Power button ----------
+    public void onPowerClick(View view) {
         if (isResultDisplayed) {
-            currentExpression = "√(";
+            currentExpression = "^";
             isResultDisplayed = false;
         } else {
-            currentExpression += "√(";
+            currentExpression += "^";
         }
         updateDisplay();
         evaluatePreview();
     }
 
-    // Modified to auto‑close parenthesis after typing first digit inside √(
+    // ---------- Number click ----------
     public void onNumberClick(View view) {
         Button b = (Button) view;
         String digit = b.getText().toString();
@@ -129,13 +118,6 @@ public class CalculatorActivity extends AppCompatActivity {
             return;
         }
 
-        // Check if we are typing the first digit after an unclosed "√("
-        boolean insideUnclosedSqrt = false;
-        if (currentExpression.endsWith("√(")) {
-            insideUnclosedSqrt = true;
-        }
-
-        // Normal digit insertion
         if (currentExpression.equals("0") && !digit.equals(".")) {
             currentExpression = digit;
         } else if (digit.equals(".") && lastCharIsOperator()) {
@@ -144,11 +126,6 @@ public class CalculatorActivity extends AppCompatActivity {
             return;
         } else {
             currentExpression += digit;
-        }
-
-        // If we were inside an unclosed sqrt, automatically close the parenthesis
-        if (insideUnclosedSqrt) {
-            currentExpression += ")";
         }
 
         limitDigits();
@@ -187,6 +164,7 @@ public class CalculatorActivity extends AppCompatActivity {
         currentExpression = "0";
         isResultDisplayed = false;
         lastResult = "";
+        clearHistory();
         updateDisplay();
         preview.setText("");
     }
@@ -196,7 +174,7 @@ public class CalculatorActivity extends AppCompatActivity {
         if (tokens.isEmpty()) return;
         for (int i = tokens.size() - 1; i >= 0; i--) {
             String token = tokens.get(i);
-            if (!isOperator(token) && !token.contains("√")) {
+            if (!isOperator(token) && !token.equals("^")) {
                 try {
                     double val = Double.parseDouble(token);
                     val = val / 100;
@@ -238,83 +216,50 @@ public class CalculatorActivity extends AppCompatActivity {
         }
     }
 
-    // ---------- Safe evaluation (no regex) ----------
+    // ---------- Evaluation with power (^) ----------
     private double evaluateExpression(String expr) {
-        return evaluateSqrt(expr);
-    }
-
-    private double evaluateSqrt(String expr) {
-        int index = expr.indexOf("√(");
-        if (index == -1) {
-            return evaluateSimple(expr);
-        }
-        int openPos = index + 2;
-        int closePos = findMatchingParenthesis(expr, openPos);
-        if (closePos == -1) {
-            closePos = expr.length();
-        }
-        String inside = expr.substring(openPos, closePos);
-        double innerVal = evaluateSqrt(inside);
-        double sqrtVal = Math.sqrt(innerVal);
-        String sqrtStr = formatNumber(sqrtVal);
-        String remaining = expr.substring(0, index) + sqrtStr + expr.substring(closePos);
-        return evaluateSqrt(remaining);
-    }
-
-    private int findMatchingParenthesis(String expr, int start) {
-        int depth = 1;
-        for (int i = start; i < expr.length(); i++) {
-            char c = expr.charAt(i);
-            if (c == '(') depth++;
-            else if (c == ')') {
-                depth--;
-                if (depth == 0) return i;
-            }
-        }
-        return -1;
-    }
-
-    private double evaluateSimple(String expr) {
-        List<String> tokens = new ArrayList<>();
-        StringBuilder num = new StringBuilder();
-        for (int i = 0; i < expr.length(); i++) {
-            char c = expr.charAt(i);
-            if (c == '+' || c == '−' || c == '×' || c == '÷') {
-                if (num.length() > 0) {
-                    tokens.add(num.toString());
-                    num.setLength(0);
-                }
-                tokens.add(String.valueOf(c));
-            } else {
-                num.append(c);
-            }
-        }
-        if (num.length() > 0) tokens.add(num.toString());
+        List<String> tokens = tokenizeExpression(expr);
         if (tokens.isEmpty()) return 0;
 
-        List<String> postTokens = new ArrayList<>();
+        List<String> powTokens = new ArrayList<>();
         for (int i = 0; i < tokens.size(); i++) {
             String t = tokens.get(i);
-            if (t.equals("×") || t.equals("÷")) {
-                double left = Double.parseDouble(postTokens.remove(postTokens.size() - 1));
+            if (t.equals("^")) {
+                double left = Double.parseDouble(powTokens.remove(powTokens.size() - 1));
                 double right = Double.parseDouble(tokens.get(i + 1));
-                double result = t.equals("×") ? left * right : left / right;
-                postTokens.add(formatNumber(result));
+                double result = Math.pow(left, right);
+                powTokens.add(formatNumber(result));
                 i++;
             } else {
-                postTokens.add(t);
+                powTokens.add(t);
             }
         }
-        double result = Double.parseDouble(postTokens.get(0));
-        for (int i = 1; i < postTokens.size(); i += 2) {
-            String op = postTokens.get(i);
-            double next = Double.parseDouble(postTokens.get(i + 1));
+
+        List<String> mulDivTokens = new ArrayList<>();
+        for (int i = 0; i < powTokens.size(); i++) {
+            String t = powTokens.get(i);
+            if (t.equals("×") || t.equals("÷")) {
+                double left = Double.parseDouble(mulDivTokens.remove(mulDivTokens.size() - 1));
+                double right = Double.parseDouble(powTokens.get(i + 1));
+                double result = t.equals("×") ? left * right : left / right;
+                mulDivTokens.add(formatNumber(result));
+                i++;
+            } else {
+                mulDivTokens.add(t);
+            }
+        }
+
+        double result = Double.parseDouble(mulDivTokens.get(0));
+        for (int i = 1; i < mulDivTokens.size(); i += 2) {
+            String op = mulDivTokens.get(i);
+            double next = Double.parseDouble(mulDivTokens.get(i + 1));
             if (op.equals("+")) result += next;
             else if (op.equals("−")) result -= next;
         }
         return result;
     }
 
+    // ---------- Helper methods ----------
     private void updateDisplay() {
         display.setText(currentExpression);
     }
@@ -335,29 +280,29 @@ public class CalculatorActivity extends AppCompatActivity {
     private boolean lastCharIsOperator() {
         if (currentExpression.isEmpty()) return false;
         char last = currentExpression.charAt(currentExpression.length() - 1);
-        return last == '+' || last == '−' || last == '×' || last == '÷';
+        return last == '+' || last == '−' || last == '×' || last == '÷' || last == '^';
     }
 
     private boolean isOperator(String s) {
-        return s.equals("+") || s.equals("−") || s.equals("×") || s.equals("÷");
+        return s.equals("+") || s.equals("−") || s.equals("×") || s.equals("÷") || s.equals("^");
     }
 
     private List<String> tokenizeExpression(String expr) {
         List<String> tokens = new ArrayList<>();
-        StringBuilder current = new StringBuilder();
+        StringBuilder cur = new StringBuilder();
         for (int i = 0; i < expr.length(); i++) {
             char c = expr.charAt(i);
-            if (c == '+' || c == '−' || c == '×' || c == '÷') {
-                if (current.length() > 0) {
-                    tokens.add(current.toString());
-                    current.setLength(0);
+            if (c == '+' || c == '−' || c == '×' || c == '÷' || c == '^') {
+                if (cur.length() > 0) {
+                    tokens.add(cur.toString());
+                    cur.setLength(0);
                 }
                 tokens.add(String.valueOf(c));
             } else {
-                current.append(c);
+                cur.append(c);
             }
         }
-        if (current.length() > 0) tokens.add(current.toString());
+        if (cur.length() > 0) tokens.add(cur.toString());
         return tokens;
     }
 
@@ -366,8 +311,6 @@ public class CalculatorActivity extends AppCompatActivity {
         StringBuilder limited = new StringBuilder();
         for (String token : tokens) {
             if (isOperator(token)) {
-                limited.append(token);
-            } else if (token.contains("√")) {
                 limited.append(token);
             } else {
                 if (token.contains(".")) {

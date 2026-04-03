@@ -1,43 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="CalcButtonNum">
+    <style name="CalcButton">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">60dp</item>
         <item name="android:layout_weight">1</item>
-        <item name="android:textSize">18sp</item>
-        <item name="android:background">@drawable/btn_rounded_num</item>
-        <item name="android:textColor">?attr/calcButtonNumTextColor</item>
+        <item name="android:textSize">28sp</item>
+        <item name="android:background">@drawable/btn_rounded</item>
+        <item name="android:textColor">?attr/calcButtonTextColor</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:gravity">center</item>
         <item name="android:layout_margin">4dp</item>
     </style>
 
-    <style name="CalcButtonOp">
-        <item name="android:layout_width">0dp</item>
-        <item name="android:layout_height">60dp</item>
-        <item name="android:layout_weight">1</item>
-        <item name="android:textSize">18sp</item>
-        <item name="android:background">@drawable/btn_rounded_op</item>
-        <item name="android:textColor">?attr/calcButtonOpTextColor</item>
-        <item name="android:gravity">center</item>
-        <item name="android:layout_margin">4dp</item>
-    </style>
-
-    <style name="CalcButtonGray">
-        <item name="android:layout_width">0dp</item>
-        <item name="android:layout_height">60dp</item>
-        <item name="android:layout_weight">1</item>
-        <item name="android:textSize">18sp</item>
-        <item name="android:background">@drawable/btn_rounded_gray</item>
-        <item name="android:textColor">?attr/calcButtonGrayTextColor</item>
-        <item name="android:gravity">center</item>
-        <item name="android:layout_margin">4dp</item>
-    </style>
-
-    <style name="TransparentDialogTheme" parent="Theme.AppCompat.Dialog">
-        <item name="android:windowIsTranslucent">true</item>
-        <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:windowContentOverlay">@null</item>
-        <item name="android:windowNoTitle">true</item>
-        <item name="android:backgroundDimEnabled">true</item>
-    </style>
+    <style name="CalcButtonNum" parent="CalcButton" />
+    <style name="CalcButtonOp" parent="CalcButton" />
+    <style name="CalcButtonGray" parent="CalcButton" />
 </resources>

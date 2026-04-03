@@ -3,40 +3,36 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:windowBackground">
+    android:background="?attr/calcDisplayBackground">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark">
+        android:theme="@style/ThemeOverlay.AppCompat.Dark" />
+
+    <!-- History area – same background as root -->
+    <ScrollView
+        android:id="@+id/historyScroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.4"
+        android:background="?attr/calcDisplayBackground"
+        android:padding="8dp">
 
         <LinearLayout
+            android:id="@+id/historyContainer"
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal">
+            android:layout_height="wrap_content" />
+    </ScrollView>
 
-            <ImageButton
-                android:id="@+id/historyButton"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:src="@android:drawable/ic_menu_recent_history"
-                android:background="@android:color/transparent"
-                android:scaleType="centerInside"
-                android:layout_gravity="center_vertical" />
-
-            <View
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
-        </LinearLayout>
-    </androidx.appcompat.widget.Toolbar>
-
+    <!-- Current calculation area -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_weight="0.6"
         android:orientation="vertical"
         android:gravity="bottom">
 
@@ -49,13 +45,14 @@
             android:padding="12dp"
             android:paddingBottom="4dp"
             android:gravity="end"
-            android:alpha="0.6" />
+            android:alpha="0.6"
+            android:background="?attr/calcDisplayBackground" />
 
         <EditText
             android:id="@+id/display"
             android:layout_width="match_parent"
             android:layout_height="70dp"
-            android:textSize="28sp"
+            android:textSize="36sp"
             android:gravity="end|center_vertical"
             android:padding="12dp"
             android:background="?attr/calcDisplayBackground"
@@ -66,6 +63,7 @@
             android:ellipsize="start" />
     </LinearLayout>
 
+    <!-- Buttons grid (unchanged) -->
     <TableLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -99,9 +97,8 @@
             <Button style="@style/CalcButtonNum" android:text="3" android:onClick="onNumberClick" />
             <Button style="@style/CalcButtonOp" android:text="+" android:onClick="onOperatorClick" />
         </TableRow>
-        <!-- Symmetric bottom row: √, 0, ., = -->
         <TableRow>
-            <Button style="@style/CalcButtonOp" android:text="√" android:onClick="onSquareRootClick" />
+            <Button style="@style/CalcButtonOp" android:text="^" android:onClick="onPowerClick" />
             <Button style="@style/CalcButtonNum" android:text="0" android:onClick="onNumberClick" />
             <Button style="@style/CalcButtonNum" android:text="." android:onClick="onNumberClick" />
             <Button style="@style/CalcButtonOp" android:text="=" android:onClick="onEqualClick" />

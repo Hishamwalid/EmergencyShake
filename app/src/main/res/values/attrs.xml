@@ -2,12 +2,7 @@
 <resources>
     <attr name="calcDisplayBackground" format="color" />
     <attr name="calcDisplayTextColor" format="color" />
-    <attr name="calcButtonNumBackground" format="color" />
-    <attr name="calcButtonNumTextColor" format="color" />
-    <attr name="calcButtonOpBackground" format="color" />
-    <attr name="calcButtonOpTextColor" format="color" />
-    <attr name="calcButtonGrayBackground" format="color" />
-    <attr name="calcButtonGrayTextColor" format="color" />
+    <attr name="calcButtonBackground" format="color" />
+    <attr name="calcButtonTextColor" format="color" />
     <attr name="calcHistoryTextColor" format="color" />
-    <attr name="calcHistoryBackground" format="color" />
 </resources>
