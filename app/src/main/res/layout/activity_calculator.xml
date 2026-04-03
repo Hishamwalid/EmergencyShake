@@ -1,47 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
-    android:padding="16dp"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#F0F0F0">
 
-    <!-- Display -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="#2196F3"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
+
     <EditText
         android:id="@+id/display"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:textSize="24sp"
-        android:hint="0" />
+        android:layout_height="100dp"
+        android:textSize="32sp"
+        android:gravity="end|center_vertical"
+        android:padding="16dp"
+        android:background="#FFFFFF"
+        android:text="0"
+        android:enabled="false" />
 
-    <!-- Buttons -->
-    <Button
+    <GridLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="1"
-        android:onClick="click"/>
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:rowCount="5"
+        android:columnCount="4"
+        android:layout_margin="8dp">
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="2"
-        android:onClick="click"/>
+        <Button style="@style/CalcButtonGray" android:text="AC" android:onClick="onClearClick" />
+        <Button style="@style/CalcButtonGray" android:text="%" android:onClick="onPercentClick" />
+        <Button style="@style/CalcButtonOp" android:text="÷" android:onClick="onOperatorClick" />
+        <Button style="@style/CalcButtonOp" android:text="×" android:onClick="onOperatorClick" />
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="3"
-        android:onClick="click"/>
+        <Button style="@style/CalcButtonNum" android:text="7" android:onClick="onNumberClick" />
+        <Button style="@style/CalcButtonNum" android:text="8" android:onClick="onNumberClick" />
+        <Button style="@style/CalcButtonNum" android:text="9" android:onClick="onNumberClick" />
+        <Button style="@style/CalcButtonOp" android:text="−" android:onClick="onOperatorClick" />
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Clear"
-        android:onClick="clear"/>
+        <Button style="@style/CalcButtonNum" android:text="4" android:onClick="onNumberClick" />
+        <Button style="@style/CalcButtonNum" android:text="5" android:onClick="onNumberClick" />
+        <Button style="@style/CalcButtonNum" android:text="6" android:onClick="onNumberClick" />
+        <Button style="@style/CalcButtonOp" android:text="+" android:onClick="onOperatorClick" />
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="="
-        android:onClick="equal"/>
+        <Button style="@style/CalcButtonNum" android:text="1" android:onClick="onNumberClick" />
+        <Button style="@style/CalcButtonNum" android:text="2" android:onClick="onNumberClick" />
+        <Button style="@style/CalcButtonNum" android:text="3" android:onClick="onNumberClick" />
+        <Button style="@style/CalcButtonOp" android:text="=" android:onClick="onEqualClick" android:layout_rowSpan="2"/>
 
+        <Button style="@style/CalcButtonNum" android:text="0" android:onClick="onNumberClick" />
+        <Button style="@style/CalcButtonNum" android:text="." android:onClick="onNumberClick" />
+
+    </GridLayout>
 </LinearLayout>
