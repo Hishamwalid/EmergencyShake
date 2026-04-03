@@ -4,34 +4,7 @@
     android:padding="16dp"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-
-    <!-- Contact Input -->
-    <EditText
-        android:id="@+id/number"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Enter Contact Number"
-        android:inputType="phone"/>
-
-    <!-- Save Button -->
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Save Contact"
-        android:onClick="save"/>
-
-    <!-- Start Service -->
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Start Protection"
-        android:onClick="start"/>
-
-    <!-- Stop Service -->
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Stop Protection"
-        android:onClick="stop"/>
-
+    <TextView android:text="Emergency Contact" android:textStyle="bold" android:layout_marginTop="16dp"/>
+    <EditText android:id="@+id/etContact" android:hint="Phone number" android:inputType="phone" android:layout_marginBottom="8dp"/>
+    <Button android:id="@+id/btnSaveContact" android:text="Save Contact"/>
 </LinearLayout>
