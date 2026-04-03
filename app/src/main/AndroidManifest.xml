@@ -1,26 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.silentemergency">
 
-    <uses-permission android:name="android.permission.SEND_SMS"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.CALL_PHONE"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.SEND_SMS" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:allowBackup="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
-        <activity android:name=".ui.SettingsActivity"/>
-
-        <activity android:name=".ui.CalculatorActivity">
+        <activity android:name=".FirstTimeSetupActivity" />
+        <activity android:name=".CalculatorActivity">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".SettingsActivity" />
 
-        <service android:name=".service.EmergencyService"/>
-        <service android:name=".EmergencyHandler"/>
-
+        <!-- Services commented for Day 1 -->
+        <!-- <service android:name=".service.EmergencyService" android:exported="false" android:foregroundServiceType="dataSync" /> -->
+        <!-- <service android:name=".EmergencyHandler" android:exported="false" /> -->
     </application>
 </manifest>
