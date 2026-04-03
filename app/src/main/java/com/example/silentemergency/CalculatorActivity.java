@@ -2,7 +2,6 @@ package com.example.silentemergency;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -78,34 +77,31 @@ public class CalculatorActivity extends AppCompatActivity {
             empty.setPadding(16, 16, 16, 16);
             empty.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
             empty.setTextSize(14);
-            empty.setGravity(Gravity.END);  // right-align
+            empty.setGravity(android.view.Gravity.END);
             historyContainer.addView(empty);
         } else {
             for (String entry : historyEntries) {
                 TextView tv = new TextView(this);
                 tv.setText(entry);
-                tv.setTextSize(16);
+                tv.setTextSize(14);
                 tv.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
                 tv.setPadding(8, 6, 8, 6);
-                tv.setGravity(Gravity.END);  // right-align
+                tv.setGravity(android.view.Gravity.END);
                 historyContainer.addView(tv);
             }
         }
     }
 
-    // ---------- Power button ----------
-    public void onPowerClick(View view) {
-        if (isResultDisplayed) {
-            currentExpression = "^";
-            isResultDisplayed = false;
-        } else {
-            currentExpression += "^";
-        }
-        updateDisplay();
-        evaluatePreview();
+    // Helper to get the last number token (for decimal check)
+    private String getLastNumber() {
+        List<String> tokens = tokenizeExpression(currentExpression);
+        if (tokens.isEmpty()) return "";
+        String last = tokens.get(tokens.size() - 1);
+        if (isOperator(last)) return "";
+        return last;
     }
 
-    // ---------- Number click ----------
+    // ---------- Number click with fixed decimal handling ----------
     public void onNumberClick(View view) {
         Button b = (Button) view;
         String digit = b.getText().toString();
@@ -118,14 +114,34 @@ public class CalculatorActivity extends AppCompatActivity {
             return;
         }
 
-        if (currentExpression.equals("0") && !digit.equals(".")) {
-            currentExpression = digit;
-        } else if (digit.equals(".") && lastCharIsOperator()) {
-            currentExpression += "0.";
-        } else if (digit.equals(".") && currentExpression.contains(".") && !lastCharIsOperator()) {
-            return;
+        if (digit.equals(".")) {
+            // Case 1: current expression is exactly "0" -> "0."
+            if (currentExpression.equals("0")) {
+                currentExpression = "0.";
+            }
+            // Case 2: already ends with a dot -> ignore
+            else if (currentExpression.endsWith(".")) {
+                return;
+            }
+            // Case 3: last character is an operator -> add "0."
+            else if (lastCharIsOperator()) {
+                currentExpression += "0.";
+            }
+            // Case 4: last number already contains a dot -> ignore
+            else if (getLastNumber().contains(".")) {
+                return;
+            }
+            // Case 5: normal decimal point addition
+            else {
+                currentExpression += ".";
+            }
         } else {
-            currentExpression += digit;
+            // Normal digit
+            if (currentExpression.equals("0") && !digit.equals(".")) {
+                currentExpression = digit;
+            } else {
+                currentExpression += digit;
+            }
         }
 
         limitDigits();
@@ -174,7 +190,7 @@ public class CalculatorActivity extends AppCompatActivity {
         if (tokens.isEmpty()) return;
         for (int i = tokens.size() - 1; i >= 0; i--) {
             String token = tokens.get(i);
-            if (!isOperator(token) && !token.equals("^")) {
+            if (!isOperator(token)) {
                 try {
                     double val = Double.parseDouble(token);
                     val = val / 100;
@@ -216,11 +232,28 @@ public class CalculatorActivity extends AppCompatActivity {
         }
     }
 
-    // ---------- Evaluation with power (^) ----------
+    public void onPowerClick(View view) {
+        if (isResultDisplayed) {
+            currentExpression = "^";
+            isResultDisplayed = false;
+        } else {
+            currentExpression += "^";
+        }
+        updateDisplay();
+        evaluatePreview();
+    }
+
+    // ---------- Evaluation (handles power and trailing dot) ----------
     private double evaluateExpression(String expr) {
+        String sanitized = expr.replaceAll("\\.$", ".0");
+        return evaluateFull(sanitized);
+    }
+
+    private double evaluateFull(String expr) {
         List<String> tokens = tokenizeExpression(expr);
         if (tokens.isEmpty()) return 0;
 
+        // Power
         List<String> powTokens = new ArrayList<>();
         for (int i = 0; i < tokens.size(); i++) {
             String t = tokens.get(i);
@@ -235,6 +268,7 @@ public class CalculatorActivity extends AppCompatActivity {
             }
         }
 
+        // Multiply / divide
         List<String> mulDivTokens = new ArrayList<>();
         for (int i = 0; i < powTokens.size(); i++) {
             String t = powTokens.get(i);
@@ -249,6 +283,7 @@ public class CalculatorActivity extends AppCompatActivity {
             }
         }
 
+        // Add / subtract
         double result = Double.parseDouble(mulDivTokens.get(0));
         for (int i = 1; i < mulDivTokens.size(); i += 2) {
             String op = mulDivTokens.get(i);
@@ -259,13 +294,12 @@ public class CalculatorActivity extends AppCompatActivity {
         return result;
     }
 
-    // ---------- Helper methods ----------
     private void updateDisplay() {
         display.setText(currentExpression);
     }
 
     private void evaluatePreview() {
-        if (isResultDisplayed || currentExpression.isEmpty() || lastCharIsOperator()) {
+        if (isResultDisplayed || currentExpression.isEmpty() || lastCharIsOperator() || currentExpression.endsWith(".")) {
             preview.setText("");
             return;
         }
@@ -306,20 +340,29 @@ public class CalculatorActivity extends AppCompatActivity {
         return tokens;
     }
 
+    // --- UPDATED METHOD HERE ---
     private void limitDigits() {
         List<String> tokens = tokenizeExpression(currentExpression);
         StringBuilder limited = new StringBuilder();
+
         for (String token : tokens) {
             if (isOperator(token)) {
                 limited.append(token);
             } else {
-                if (token.contains(".")) {
-                    String[] parts = token.split("\\.");
-                    if (parts[0].length() > MAX_DIGITS) {
-                        parts[0] = parts[0].substring(0, MAX_DIGITS);
+                int dotIndex = token.indexOf('.');
+
+                if (dotIndex != -1) {
+                    // Has a decimal point. Split into integer and decimal parts.
+                    String intPart = token.substring(0, dotIndex);
+                    String decPart = token.substring(dotIndex); // This includes the "." and anything after
+
+                    // Enforce MAX_DIGITS limit only on the integer portion
+                    if (intPart.length() > MAX_DIGITS) {
+                        intPart = intPart.substring(0, MAX_DIGITS);
                     }
-                    limited.append(parts[0]).append(".").append(parts[1]);
+                    limited.append(intPart).append(decPart);
                 } else {
+                    // No decimal point, limit the whole number
                     if (token.length() > MAX_DIGITS) {
                         token = token.substring(0, MAX_DIGITS);
                     }
@@ -327,8 +370,11 @@ public class CalculatorActivity extends AppCompatActivity {
                 }
             }
         }
+
         currentExpression = limited.toString();
-        if (currentExpression.isEmpty()) currentExpression = "0";
+        if (currentExpression.isEmpty()) {
+            currentExpression = "0";
+        }
     }
 
     private String formatNumber(double d) {
