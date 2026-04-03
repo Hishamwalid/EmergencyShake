@@ -2,27 +2,60 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.silentemergency">
 
+    <!-- Permissions -->
     <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
+    <!-- Declare that telephony hardware is not required (for SMS and CALL) -->
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
+
+    <!-- Declare that GPS is not strictly required (app can work without it) -->
+    <uses-feature
+        android:name="android.hardware.location.gps"
+        android:required="false" />
+
     <application
         android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
-        <activity android:name=".FirstTimeSetupActivity" />
-        <activity android:name=".CalculatorActivity">
+        <!-- First time setup activity -->
+        <activity
+            android:name=".FirstTimeSetupActivity"
+            android:exported="false" />
+
+        <!-- Main calculator activity (launcher) -->
+        <activity
+            android:name=".CalculatorActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".SettingsActivity" />
 
-        <!-- Services commented for Day 1 -->
-        <!-- <service android:name=".service.EmergencyService" android:exported="false" android:foregroundServiceType="dataSync" /> -->
-        <!-- <service android:name=".EmergencyHandler" android:exported="false" /> -->
+        <!-- Settings activity -->
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false" />
+
+        <!-- Services – COMMENTED for Day 1. Uncomment on Day 2 -->
+        <!--
+        <service
+            android:name=".service.EmergencyService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+        <service
+            android:name=".EmergencyHandler"
+            android:exported="false" />
+        -->
+
     </application>
 </manifest>
