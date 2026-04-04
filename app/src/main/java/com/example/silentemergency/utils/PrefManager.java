@@ -21,6 +21,9 @@ public class PrefManager {
         prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         editor = prefs.edit();
     }
+    public SharedPreferences getPrefs() {
+        return prefs;
+    }
 
     public boolean isFirstTime() { return prefs.getBoolean(KEY_IS_FIRST_TIME, true); }
     public void setFirstTime(boolean isFirst) { editor.putBoolean(KEY_IS_FIRST_TIME, isFirst); editor.apply(); }

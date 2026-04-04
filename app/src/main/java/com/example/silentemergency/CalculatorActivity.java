@@ -2,6 +2,7 @@ package com.example.silentemergency;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -12,8 +13,9 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
 import com.example.silentemergency.utils.PrefManager;
+import org.json.JSONArray;
+import org.json.JSONException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +33,9 @@ public class CalculatorActivity extends AppCompatActivity {
     private boolean isResultDisplayed = false;
     private static final int MAX_DIGITS = 12;
     private DecimalFormat df = new DecimalFormat("#.##########");
+
+    // Key for SharedPreferences
+    private static final String KEY_HISTORY = "calculator_history";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,28 +59,59 @@ public class CalculatorActivity extends AppCompatActivity {
             finish();
         }
 
+        loadHistory();      // Load saved history
         updateDisplay();
+        updateHistoryUI();  // Apply correct theme color
+    }
+
+    private void loadHistory() {
+        String json = prefManager.getPrefs().getString(KEY_HISTORY, "");
+        if (json.isEmpty()) return;
+        try {
+            JSONArray arr = new JSONArray(json);
+            historyEntries.clear();
+            for (int i = 0; i < arr.length(); i++) {
+                historyEntries.add(arr.getString(i));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void saveHistory() {
+        JSONArray arr = new JSONArray();
+        for (String entry : historyEntries) {
+            arr.put(entry);
+        }
+        prefManager.getPrefs().edit().putString(KEY_HISTORY, arr.toString()).apply();
     }
 
     private void addToHistory(String expr, String result) {
         historyEntries.add(0, expr + " = " + result);
         if (historyEntries.size() > 20) historyEntries.remove(historyEntries.size() - 1);
+        saveHistory();
         updateHistoryUI();
         historyScroll.post(() -> historyScroll.fullScroll(View.FOCUS_UP));
     }
 
     private void clearHistory() {
         historyEntries.clear();
+        saveHistory();
         updateHistoryUI();
     }
 
     private void updateHistoryUI() {
         historyContainer.removeAllViews();
+        // Get history text color from current theme
+        TypedValue typedValue = new TypedValue();
+        getTheme().resolveAttribute(R.attr.calcHistoryTextColor, typedValue, true);
+        int historyColor = typedValue.data;
+
         if (historyEntries.isEmpty()) {
             TextView empty = new TextView(this);
             empty.setText("No calculations yet");
             empty.setPadding(16, 16, 16, 16);
-            empty.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
+            empty.setTextColor(historyColor);
             empty.setTextSize(14);
             empty.setGravity(android.view.Gravity.END);
             historyContainer.addView(empty);
@@ -84,7 +120,7 @@ public class CalculatorActivity extends AppCompatActivity {
                 TextView tv = new TextView(this);
                 tv.setText(entry);
                 tv.setTextSize(14);
-                tv.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
+                tv.setTextColor(historyColor);
                 tv.setPadding(8, 6, 8, 6);
                 tv.setGravity(android.view.Gravity.END);
                 historyContainer.addView(tv);
@@ -92,6 +128,7 @@ public class CalculatorActivity extends AppCompatActivity {
         }
     }
 
+    // ---------- Calculator logic (unchanged from your working version) ----------
     private String getLastNumber() {
         List<String> tokens = tokenizeExpression(currentExpression);
         if (tokens.isEmpty()) return "";
@@ -380,7 +417,6 @@ public class CalculatorActivity extends AppCompatActivity {
             recreate();
             return true;
         } else if (id == R.id.action_settings) {
-            // ✅ Opens password reset activity (not emergency settings)
             startActivity(new Intent(this, ResetPasswordActivity.class));
             return true;
         }
