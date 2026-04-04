@@ -34,7 +34,7 @@ public class ResetPasswordActivity extends AppCompatActivity {
         btnVerifyAnswer = findViewById(R.id.btnVerifyAnswer);
         btnSetPassword = findViewById(R.id.btnSetPassword);
 
-        // Display the stored security question
+        // Display stored security question
         String question = prefManager.getSecurityQuestion();
         if (question != null && !question.isEmpty()) {
             tvSecurityQuestion.setText(question);
@@ -45,12 +45,11 @@ public class ResetPasswordActivity extends AppCompatActivity {
         btnVerifyAnswer.setOnClickListener(v -> {
             String answer = etAnswer.getText().toString().trim();
             if (prefManager.checkSecurityAnswer(answer)) {
-                // Answer correct – show password fields
                 layoutNewPassword.setVisibility(View.VISIBLE);
                 btnVerifyAnswer.setVisibility(View.GONE);
                 etAnswer.setEnabled(false);
             } else {
-                Toast.makeText(this, "Incorrect answer. Please try again.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Incorrect answer", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -72,8 +71,8 @@ public class ResetPasswordActivity extends AppCompatActivity {
             }
 
             prefManager.setPassword(newPass);
-            Toast.makeText(this, "Password changed successfully!", Toast.LENGTH_SHORT).show();
-            finish(); // Close activity
+            Toast.makeText(this, "Password changed successfully", Toast.LENGTH_SHORT).show();
+            finish();
         });
     }
 }
