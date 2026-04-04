@@ -25,9 +25,12 @@ public class FirstTimeSetupActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        prefManager = new PrefManager(this);
+        // Apply current theme (dark/light) before layout
+        if (prefManager.isDarkMode()) setTheme(R.style.AppTheme_Dark);
+        else setTheme(R.style.AppTheme_Light);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_first_time_setup);
-        prefManager = new PrefManager(this);
 
         etPassword = findViewById(R.id.etPassword);
         etConfirmPassword = findViewById(R.id.etConfirmPassword);
@@ -54,7 +57,6 @@ public class FirstTimeSetupActivity extends AppCompatActivity {
                     etCustomQuestion.setVisibility(View.GONE);
                 }
             }
-
             @Override
             public void onNothingSelected(AdapterView<?> parent) { }
         });

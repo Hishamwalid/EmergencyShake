@@ -13,8 +13,11 @@ public class ResetPasswordActivity extends AppCompatActivity {
     private EditText etAnswer;
     private Button btnVerifyAnswer;
     private LinearLayout layoutNewData;
+    private CheckBox cbChangePassword, cbChangeQuestion;
+    private LinearLayout layoutPassword, layoutChangeQuestion;
+    private EditText etNewPassword, etConfirmPassword;
     private Spinner spNewQuestions;
-    private EditText etNewCustomQuestion, etNewAnswer, etNewPassword, etConfirmPassword;
+    private EditText etNewCustomQuestion, etNewAnswer;
     private Button btnSetPassword;
     private PrefManager prefManager;
 
@@ -30,24 +33,30 @@ public class ResetPasswordActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        prefManager = new PrefManager(this);
+        // Apply current theme before layout
+        if (prefManager.isDarkMode()) setTheme(R.style.AppTheme_Dark);
+        else setTheme(R.style.AppTheme_Light);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reset_password);
-
-        prefManager = new PrefManager(this);
 
         verifyContainer = findViewById(R.id.verifyContainer);
         tvCurrentQuestion = findViewById(R.id.tvCurrentQuestion);
         etAnswer = findViewById(R.id.etAnswer);
         btnVerifyAnswer = findViewById(R.id.btnVerifyAnswer);
         layoutNewData = findViewById(R.id.layoutNewData);
+        cbChangePassword = findViewById(R.id.cbChangePassword);
+        cbChangeQuestion = findViewById(R.id.cbChangeQuestion);
+        layoutPassword = findViewById(R.id.layoutPassword);
+        layoutChangeQuestion = findViewById(R.id.layoutChangeQuestion);
+        etNewPassword = findViewById(R.id.etNewPassword);
+        etConfirmPassword = findViewById(R.id.etConfirmPassword);
         spNewQuestions = findViewById(R.id.spNewQuestions);
         etNewCustomQuestion = findViewById(R.id.etNewCustomQuestion);
         etNewAnswer = findViewById(R.id.etNewAnswer);
-        etNewPassword = findViewById(R.id.etNewPassword);
-        etConfirmPassword = findViewById(R.id.etConfirmPassword);
         btnSetPassword = findViewById(R.id.btnSetPassword);
 
-        // Display current security question
+        // Display current question
         String currentQuestion = prefManager.getSecurityQuestion();
         tvCurrentQuestion.setText(currentQuestion != null ? currentQuestion : "No question set");
 
@@ -72,12 +81,20 @@ public class ResetPasswordActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) {}
         });
 
+        // Show/hide password section
+        cbChangePassword.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            layoutPassword.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+        });
+
+        // Show/hide question section
+        cbChangeQuestion.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            layoutChangeQuestion.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+        });
+
         btnVerifyAnswer.setOnClickListener(v -> {
             String answer = etAnswer.getText().toString().trim();
             if (prefManager.checkSecurityAnswer(answer)) {
-                // Hide the entire verify section
                 verifyContainer.setVisibility(View.GONE);
-                // Show the update section
                 layoutNewData.setVisibility(View.VISIBLE);
             } else {
                 Toast.makeText(this, "Incorrect answer", Toast.LENGTH_SHORT).show();
@@ -85,48 +102,61 @@ public class ResetPasswordActivity extends AppCompatActivity {
         });
 
         btnSetPassword.setOnClickListener(v -> {
-            String newPass = etNewPassword.getText().toString().trim();
-            String confirm = etConfirmPassword.getText().toString().trim();
+            boolean passwordChanged = false;
+            boolean questionChanged = false;
 
-            if (newPass.isEmpty() || confirm.isEmpty()) {
-                Toast.makeText(this, "Please fill both password fields", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            if (!newPass.equals(confirm)) {
-                Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            if (!newPass.matches("\\d+")) {
-                Toast.makeText(this, "Password must contain only numbers", Toast.LENGTH_SHORT).show();
-                return;
-            }
+            if (cbChangePassword.isChecked()) {
+                String newPass = etNewPassword.getText().toString().trim();
+                String confirm = etConfirmPassword.getText().toString().trim();
 
-            // Update password
-            prefManager.setPassword(newPass);
-
-            // Update security question & answer if user provided new ones
-            int pos = spNewQuestions.getSelectedItemPosition();
-            String newQuestion;
-            if (pos == predefinedQuestions.length) {
-                newQuestion = etNewCustomQuestion.getText().toString().trim();
-                if (newQuestion.isEmpty()) {
-                    Toast.makeText(this, "Please enter a custom question", Toast.LENGTH_SHORT).show();
+                if (newPass.isEmpty() || confirm.isEmpty()) {
+                    Toast.makeText(this, "Please fill both password fields", Toast.LENGTH_SHORT).show();
                     return;
                 }
-            } else {
-                newQuestion = predefinedQuestions[pos];
+                if (!newPass.equals(confirm)) {
+                    Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (!newPass.matches("\\d+")) {
+                    Toast.makeText(this, "Password must contain only numbers", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                prefManager.setPassword(newPass);
+                passwordChanged = true;
             }
 
-            String newAnswer = etNewAnswer.getText().toString().trim();
-            if (!newAnswer.isEmpty()) {
+            if (cbChangeQuestion.isChecked()) {
+                int pos = spNewQuestions.getSelectedItemPosition();
+                String newQuestion;
+                if (pos == predefinedQuestions.length) {
+                    newQuestion = etNewCustomQuestion.getText().toString().trim();
+                    if (newQuestion.isEmpty()) {
+                        Toast.makeText(this, "Please enter a custom question", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                } else {
+                    newQuestion = predefinedQuestions[pos];
+                }
+                String newAnswer = etNewAnswer.getText().toString().trim();
+                if (newAnswer.isEmpty()) {
+                    Toast.makeText(this, "Please provide an answer for the new security question", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 prefManager.setSecurityQuestion(newQuestion);
                 prefManager.setSecurityAnswer(newAnswer);
-            } else if (!newQuestion.equals(prefManager.getSecurityQuestion())) {
-                Toast.makeText(this, "Please provide an answer for the new security question", Toast.LENGTH_SHORT).show();
-                return;
+                questionChanged = true;
             }
 
-            Toast.makeText(this, "Password and security question updated successfully", Toast.LENGTH_SHORT).show();
+            if (passwordChanged && questionChanged) {
+                Toast.makeText(this, "Password and security question updated", Toast.LENGTH_SHORT).show();
+            } else if (passwordChanged) {
+                Toast.makeText(this, "Password updated successfully", Toast.LENGTH_SHORT).show();
+            } else if (questionChanged) {
+                Toast.makeText(this, "Security question updated successfully", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "No changes selected", Toast.LENGTH_SHORT).show();
+                return;
+            }
             finish();
         });
     }

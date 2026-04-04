@@ -29,7 +29,7 @@
         android:layout_height="56dp"
         android:hint="Enter Password (numbers only)"
         android:inputType="numberPassword"
-        android:background="@drawable/bg_soft_rounded"
+        android:background="@drawable/bg_monochrome_rounded"
         android:paddingStart="20dp"
         android:paddingEnd="20dp"
         android:textColor="?android:textColorPrimary"
@@ -42,7 +42,7 @@
         android:layout_height="56dp"
         android:hint="Confirm Password"
         android:inputType="numberPassword"
-        android:background="@drawable/bg_soft_rounded"
+        android:background="@drawable/bg_monochrome_rounded"
         android:paddingStart="20dp"
         android:paddingEnd="20dp"
         android:textColor="?android:textColorPrimary"
@@ -61,17 +61,16 @@
         android:id="@+id/spQuestions"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="@drawable/bg_soft_rounded"
+        android:background="@drawable/bg_monochrome_rounded"
         android:layout_marginBottom="16dp"/>
 
-    <!-- Custom question field (initially hidden) -->
     <EditText
         android:id="@+id/etCustomQuestion"
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:hint="Enter your custom question"
         android:inputType="text"
-        android:background="@drawable/bg_soft_rounded"
+        android:background="@drawable/bg_monochrome_rounded"
         android:paddingStart="20dp"
         android:paddingEnd="20dp"
         android:textColor="?android:textColorPrimary"
@@ -85,7 +84,7 @@
         android:layout_height="56dp"
         android:hint="Your Answer"
         android:inputType="text"
-        android:background="@drawable/bg_soft_rounded"
+        android:background="@drawable/bg_monochrome_rounded"
         android:paddingStart="20dp"
         android:paddingEnd="20dp"
         android:textColor="?android:textColorPrimary"
@@ -97,8 +96,8 @@
         android:layout_width="match_parent"
         android:layout_height="52dp"
         android:text="Complete Setup"
-        android:background="@drawable/btn_modern_primary"
-        android:textColor="#FFFFFF"
+        android:background="@drawable/btn_monochrome_primary"
+        android:textColor="?android:textColorPrimary"
         android:textSize="16sp"
         android:textStyle="bold"/>
 </LinearLayout>
