@@ -9,8 +9,12 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
-    <uses-feature android:name="android.hardware.telephony" android:required="false" />
-    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.location.gps"
+        android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -19,19 +23,24 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/AppTheme_Light">
 
-        <activity android:name=".FirstTimeSetupActivity" android:exported="false" />
-        <activity android:name=".CalculatorActivity" android:exported="true">
+        <activity
+            android:name=".FirstTimeSetupActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".CalculatorActivity"
+            android:exported="true"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".SettingsActivity" android:exported="false" />
 
-        <!-- Services for Day 2/3 – commented for Day 1 -->
-        <!--
-        <service android:name=".service.EmergencyService" android:exported="false" android:foregroundServiceType="dataSync" />
-        <service android:name=".EmergencyHandler" android:exported="false" />
-        -->
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
     </application>
 </manifest>
