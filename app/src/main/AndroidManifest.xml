@@ -23,11 +23,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/AppTheme_Light">
 
+        <!-- First‑time setup -->
         <activity
             android:name=".FirstTimeSetupActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
+        <!-- Main calculator -->
         <activity
             android:name=".CalculatorActivity"
             android:exported="true"
@@ -38,9 +40,27 @@
             </intent-filter>
         </activity>
 
+        <!-- Password reset (visible from three‑dot menu) -->
+        <activity
+            android:name=".ResetPasswordActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Emergency settings (hidden – opened only by password + "=") -->
         <activity
             android:name=".SettingsActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
+
+        <!-- Services (will be uncommented in Day 2/3) -->
+        <!--
+        <service
+            android:name=".service.EmergencyService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+        <service
+            android:name=".EmergencyHandler"
+            android:exported="false" />
+        -->
     </application>
 </manifest>

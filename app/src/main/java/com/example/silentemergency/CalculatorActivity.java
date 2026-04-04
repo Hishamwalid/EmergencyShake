@@ -92,7 +92,6 @@ public class CalculatorActivity extends AppCompatActivity {
         }
     }
 
-    // Helper to get the last number token (for decimal check)
     private String getLastNumber() {
         List<String> tokens = tokenizeExpression(currentExpression);
         if (tokens.isEmpty()) return "";
@@ -101,7 +100,6 @@ public class CalculatorActivity extends AppCompatActivity {
         return last;
     }
 
-    // ---------- Number click with fixed decimal handling ----------
     public void onNumberClick(View view) {
         Button b = (Button) view;
         String digit = b.getText().toString();
@@ -115,28 +113,18 @@ public class CalculatorActivity extends AppCompatActivity {
         }
 
         if (digit.equals(".")) {
-            // Case 1: current expression is exactly "0" -> "0."
             if (currentExpression.equals("0")) {
                 currentExpression = "0.";
-            }
-            // Case 2: already ends with a dot -> ignore
-            else if (currentExpression.endsWith(".")) {
+            } else if (currentExpression.endsWith(".")) {
                 return;
-            }
-            // Case 3: last character is an operator -> add "0."
-            else if (lastCharIsOperator()) {
+            } else if (lastCharIsOperator()) {
                 currentExpression += "0.";
-            }
-            // Case 4: last number already contains a dot -> ignore
-            else if (getLastNumber().contains(".")) {
+            } else if (getLastNumber().contains(".")) {
                 return;
-            }
-            // Case 5: normal decimal point addition
-            else {
+            } else {
                 currentExpression += ".";
             }
         } else {
-            // Normal digit
             if (currentExpression.equals("0") && !digit.equals(".")) {
                 currentExpression = digit;
             } else {
@@ -243,7 +231,6 @@ public class CalculatorActivity extends AppCompatActivity {
         evaluatePreview();
     }
 
-    // ---------- Evaluation (handles power and trailing dot) ----------
     private double evaluateExpression(String expr) {
         String sanitized = expr.replaceAll("\\.$", ".0");
         return evaluateFull(sanitized);
@@ -253,7 +240,6 @@ public class CalculatorActivity extends AppCompatActivity {
         List<String> tokens = tokenizeExpression(expr);
         if (tokens.isEmpty()) return 0;
 
-        // Power
         List<String> powTokens = new ArrayList<>();
         for (int i = 0; i < tokens.size(); i++) {
             String t = tokens.get(i);
@@ -268,7 +254,6 @@ public class CalculatorActivity extends AppCompatActivity {
             }
         }
 
-        // Multiply / divide
         List<String> mulDivTokens = new ArrayList<>();
         for (int i = 0; i < powTokens.size(); i++) {
             String t = powTokens.get(i);
@@ -283,7 +268,6 @@ public class CalculatorActivity extends AppCompatActivity {
             }
         }
 
-        // Add / subtract
         double result = Double.parseDouble(mulDivTokens.get(0));
         for (int i = 1; i < mulDivTokens.size(); i += 2) {
             String op = mulDivTokens.get(i);
@@ -340,7 +324,6 @@ public class CalculatorActivity extends AppCompatActivity {
         return tokens;
     }
 
-    // --- UPDATED METHOD HERE ---
     private void limitDigits() {
         List<String> tokens = tokenizeExpression(currentExpression);
         StringBuilder limited = new StringBuilder();
@@ -350,19 +333,14 @@ public class CalculatorActivity extends AppCompatActivity {
                 limited.append(token);
             } else {
                 int dotIndex = token.indexOf('.');
-
                 if (dotIndex != -1) {
-                    // Has a decimal point. Split into integer and decimal parts.
                     String intPart = token.substring(0, dotIndex);
-                    String decPart = token.substring(dotIndex); // This includes the "." and anything after
-
-                    // Enforce MAX_DIGITS limit only on the integer portion
+                    String decPart = token.substring(dotIndex);
                     if (intPart.length() > MAX_DIGITS) {
                         intPart = intPart.substring(0, MAX_DIGITS);
                     }
                     limited.append(intPart).append(decPart);
                 } else {
-                    // No decimal point, limit the whole number
                     if (token.length() > MAX_DIGITS) {
                         token = token.substring(0, MAX_DIGITS);
                     }
@@ -370,7 +348,6 @@ public class CalculatorActivity extends AppCompatActivity {
                 }
             }
         }
-
         currentExpression = limited.toString();
         if (currentExpression.isEmpty()) {
             currentExpression = "0";
@@ -385,6 +362,12 @@ public class CalculatorActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_calculator, menu);
+        MenuItem themeItem = menu.findItem(R.id.action_theme);
+        if (prefManager.isDarkMode()) {
+            themeItem.setIcon(R.drawable.ic_moon);
+        } else {
+            themeItem.setIcon(R.drawable.ic_sun);
+        }
         return true;
     }
 
@@ -397,7 +380,8 @@ public class CalculatorActivity extends AppCompatActivity {
             recreate();
             return true;
         } else if (id == R.id.action_settings) {
-            startActivity(new Intent(this, SettingsActivity.class));
+            // ✅ Opens password reset activity (not emergency settings)
+            startActivity(new Intent(this, ResetPasswordActivity.class));
             return true;
         }
         return super.onOptionsItemSelected(item);

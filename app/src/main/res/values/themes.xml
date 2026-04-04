@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Dark mode: everything pure black -->
+
     <style name="AppTheme_Dark" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowBackground">#000000</item>
         <item name="colorPrimary">#1E1E1E</item>
         <item name="colorPrimaryDark">#0D0D0D</item>
         <item name="colorAccent">#FF9800</item>
+
         <item name="calcDisplayBackground">#000000</item>
         <item name="calcDisplayTextColor">#FFFFFF</item>
         <item name="calcButtonBackground">#2C2C2C</item>
@@ -13,16 +14,17 @@
         <item name="calcHistoryTextColor">#AAAAAA</item>
     </style>
 
-    <!-- Light mode: everything pure white -->
     <style name="AppTheme_Light" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowBackground">#FFFFFF</item>
         <item name="colorPrimary">#2196F3</item>
         <item name="colorPrimaryDark">#1976D2</item>
         <item name="colorAccent">#FF9800</item>
+
         <item name="calcDisplayBackground">#FFFFFF</item>
         <item name="calcDisplayTextColor">#000000</item>
         <item name="calcButtonBackground">#E0E0E0</item>
         <item name="calcButtonTextColor">#000000</item>
         <item name="calcHistoryTextColor">#666666</item>
     </style>
+
 </resources>
