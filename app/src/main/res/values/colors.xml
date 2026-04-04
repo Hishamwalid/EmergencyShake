@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Use a dark background (e.g., #000000) for dark theme, or any solid color -->
+    <color name="ic_launcher_background">#000000</color>
+</resources>

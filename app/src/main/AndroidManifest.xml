@@ -19,11 +19,12 @@
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:theme="@style/AppTheme_Light">
+        android:theme="@style/AppTheme_Light"
+        android:supportsRtl="true">
 
-        <!-- First‑time setup -->
+        <!-- First-time setup -->
         <activity
             android:name=".FirstTimeSetupActivity"
             android:exported="false"
@@ -40,19 +41,19 @@
             </intent-filter>
         </activity>
 
-        <!-- Password reset (visible from three‑dot menu) -->
+        <!-- Password reset -->
         <activity
             android:name=".ResetPasswordActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <!-- Emergency settings (hidden – opened only by password + "=") -->
+        <!-- Emergency settings -->
         <activity
             android:name=".SettingsActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <!-- Services (will be uncommented in Day 2/3) -->
+        <!-- Future Services -->
         <!--
         <service
             android:name=".service.EmergencyService"
@@ -62,5 +63,6 @@
             android:name=".EmergencyHandler"
             android:exported="false" />
         -->
+
     </application>
 </manifest>
