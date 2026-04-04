@@ -1,76 +1,131 @@
-# Silent Emergency Alert System – Ecalculator
+<img width="1024" height="1024" alt="ChatGPT Image Apr 4, 2026, 10_38_02 PM" src="https://github.com/user-attachments/assets/32a5af59-9bab-418c-b80c-ca0f598f2e16" />
 
-**A disguised calculator that silently alerts an emergency contact when shaken.**
+**VeilCal**
+===========
 
----
+### **Silent Emergency Alert System**
 
-##  Overview
-**Ecalculator** is a personal safety Android application designed for security through discretion. It looks and works like a standard calculator, but serves as a hidden emergency gateway. 
+**VeilCal** is a personal safety Android application designed for security through discretion. On the surface, it functions as a fully operational, bug-free calculator. Beneath the interface lies a hidden emergency gateway designed to provide immediate assistance during critical situations without drawing attention.
 
-When the phone is shaken, the app automatically sends an SMS with your GPS location and initiates a phone call to a pre-registered contact—completely offline.
+* * * * *
 
----
+📱 Overview
+-----------
 
-##  Core Features
-* **Functional Calculator:** Standard math operations (+, −, ×, ÷, %, ^).
-* **Stealth Access:** Type your password then `=` to open hidden settings.
-* **Smart Shake Detection:** Configurable sensitivity and shake count.
-* **Background Service:** Stays active even when the app is closed.
-* **Emergency Response:** Automated SMS (Google Maps link) and phone call.
-* **Privacy Focused:** No internet required; all data stays on your device.
+In many emergency scenarios, opening a traditional safety app can escalate a threat. **VeilCal** solves this by hiding its true purpose. When the device is shaken, the app silently triggers an emergency protocol: sending an SMS with real-time GPS coordinates and initiating a phone call to a pre-registered contact---all without requiring an active internet connection.
 
----
+* * * * *
 
-##  Tech Stack
-* **Language:** Java 17
-* **IDE:** Android Studio
-* **Compatibility:** Min SDK 24 (Android 7.0) / Target SDK 34 (Android 14)
-* **Build System:** Gradle 8.7 / AGP 9.0.0
-* **Key APIs:** SensorManager, LocationManager, SmsManager, TelephonyManager
+✨ Core Features
+---------------
 
----
+-   **Functional Calculator:** Supports standard math operations (`+`, `-`, `×`, `÷`, `%`, `^`) with a stable, logic-error-free interface.
 
-##  Project Structure
-* **Activities:** CalculatorActivity, SettingsActivity, FirstTimeSetupActivity
-* **Core Logic:** EmergencyHandler, ShakeDetector, EmergencyService
-* **Helpers:** LocationHelper, SmsHelper, CallHelper
-* **Data:** PrefManager (SharedPreferences)
+-   **Stealth Access:** Type your master password followed by the `=` key to unlock the hidden settings dashboard.
 
----
+-   **Smart Shake Detection:** Fully configurable sensitivity and shake count to prevent accidental triggers.
 
-##  Setup & Build
-1. **Clone:** `git clone https://github.com/Hishamwalid/EmergencyShake.git`
-2. **Open:** Open the project in Android Studio and sync Gradle.
-3. **Build:** Go to `Build > Build APK(s)`.
-4. **Install:** Deploy `app-debug.apk` to a real device (enable "Unknown Sources").
+-   **Background Service:** Stays active and vigilant even when the app is closed or the screen is locked.
 
----
+-   **Emergency Response:** Automated SMS (includes a Google Maps location link) and immediate phone call initiation.
 
-##  How to Use
-1. **First Launch:** Set your master password and security question.
-2. **Enter Settings:** On the calculator, type **[Your Password]** then tap **`=`**.
-3. **Configure:** * Input an emergency phone number.
-   * Adjust shake sensitivity and count.
-   * Tap **Activate Protection**.
-4. **Trigger:** Shake the device to send the alert.
-5. **Recovery:** Use the security question to reset your password if forgotten.
+-   **Customization:** Includes theme options and an official branded UI for a polished look.
 
----
+-   **Privacy Focused:** Operates entirely offline. No data ever leaves your device except for the emergency alerts you authorize.
 
-##  Permissions
-The following are requested at runtime:
-* SMS & Phone Call access
-* Fine & Coarse Location
-* Foreground Service & Vibration
+* * * * *
 
-##  Limitations
-* **Android 10+:** Silent background calls are restricted by Google; the dialer will appear as a standard call.
-* **Hardware:** Requires an Accelerometer and GPS.
-* **Balance:** Requires mobile credit/plan to send SMS alerts.
+🛠️ Tech Stack
+--------------
 
----
+-   **Language:** Java 17
 
-## 📄 License
-Academic project – free for educational use.
+-   **IDE:** Android Studio
 
-**Repository:** https://github.com/Hishamwalid/EmergencyShake
+-   **Compatibility:** Min SDK 24 (Android 7.0) / Target SDK 34 (Android 14)
+
+-   **Build System:** Gradle 8.7 / AGP 9.0.0
+
+-   **Key APIs:** `SensorManager`, `LocationManager`, `SmsManager`, `TelephonyManager`
+
+* * * * *
+
+📂 Project Structure
+--------------------
+
+-   **Activities:** `CalculatorActivity`, `SettingsActivity`, `FirstTimeSetupActivity`
+
+-   **Core Logic:** `EmergencyHandler`, `ShakeDetector`, `EmergencyService`
+
+-   **Helpers:** `LocationHelper`, `SmsHelper`, `CallHelper`
+
+-   **Data Management:** `PrefManager` (Utilizing SharedPreferences for local storage)
+
+* * * * *
+
+🚀 Setup & Build
+----------------
+
+1.  **Clone the Repository:**
+
+    Bash
+
+    ```
+    git clone https://github.com/Hishamwalid/EmergencyShake.git
+
+    ```
+
+2.  **Open Project:** Import the folder into **Android Studio** and sync Gradle files.
+
+3.  **Build:** Navigate to `Build > Build APK(s)` to generate the installer.
+
+4.  **Install:** Deploy the `app-debug.apk` to a physical Android device. *Note: Ensure "Install from Unknown Sources" is enabled.*
+
+* * * * *
+
+📖 How to Use
+-------------
+
+1.  **First Launch:** Set your master password and choose a custom security question for recovery.
+
+2.  **Access Hidden Hub:** On the calculator interface, input your password and press `=`.
+
+3.  **Configuration:** * Add up to 3 emergency contacts.
+
+    -   Adjust shake sensitivity and trigger count via the Gear icon.
+
+    -   Tap **Activate Protection** to arm the system.
+
+4.  **Triggering:** Simply shake the device according to your configured settings to send the SOS.
+
+5.  **Recovery:** If you forget your password, use the security question reset option on the main screen.
+
+* * * * *
+
+🔐 Permissions & Limitations
+----------------------------
+
+### **Permissions Requested**
+
+-   **SMS & Phone:** To send alerts and initiate emergency calls.
+
+-   **Location (Fine & Coarse):** To include precise GPS coordinates in the SMS.
+
+-   **Foreground Service:** To ensure the shake detection remains active in the background.
+
+### **Limitations**
+
+-   **Android 10+:** Due to Google's privacy restrictions, background calls will appear via the standard system dialer rather than being completely invisible.
+
+-   **Hardware:** Requires a device equipped with an Accelerometer and GPS module.
+
+-   **Carrier Charges:** Sending SMS alerts requires a mobile plan with active credit.
+
+* * * * *
+
+📄 License
+----------
+
+*Academic project -- Distributed for educational and personal safety use.*
+
+**Repository:** <https://github.com/Hishamwalid/EmergencyShake>
