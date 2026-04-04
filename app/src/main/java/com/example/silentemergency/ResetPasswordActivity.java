@@ -2,22 +2,31 @@ package com.example.silentemergency;
 
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.silentemergency.utils.PrefManager;
 
 public class ResetPasswordActivity extends AppCompatActivity {
 
-    private TextView tvSecurityQuestion;
+    private LinearLayout verifyContainer;
+    private TextView tvCurrentQuestion;
     private EditText etAnswer;
-    private LinearLayout layoutNewPassword;
-    private EditText etNewPassword, etConfirmPassword;
-    private Button btnVerifyAnswer, btnSetPassword;
+    private Button btnVerifyAnswer;
+    private LinearLayout layoutNewData;
+    private Spinner spNewQuestions;
+    private EditText etNewCustomQuestion, etNewAnswer, etNewPassword, etConfirmPassword;
+    private Button btnSetPassword;
     private PrefManager prefManager;
+
+    private String[] predefinedQuestions = {
+            "What is your oldest sibling's nickname?",
+            "What was the name of your first-grade teacher or childhood best friend?",
+            "What was the name of your first pet or stuffed toy?",
+            "In what city did your parents meet?",
+            "What is the name of the street you grew up on?",
+            "What was your childhood nickname?",
+            "What was the name of your first employer?"
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,28 +35,50 @@ public class ResetPasswordActivity extends AppCompatActivity {
 
         prefManager = new PrefManager(this);
 
-        tvSecurityQuestion = findViewById(R.id.tvSecurityQuestion);
+        verifyContainer = findViewById(R.id.verifyContainer);
+        tvCurrentQuestion = findViewById(R.id.tvCurrentQuestion);
         etAnswer = findViewById(R.id.etAnswer);
-        layoutNewPassword = findViewById(R.id.layoutNewPassword);
+        btnVerifyAnswer = findViewById(R.id.btnVerifyAnswer);
+        layoutNewData = findViewById(R.id.layoutNewData);
+        spNewQuestions = findViewById(R.id.spNewQuestions);
+        etNewCustomQuestion = findViewById(R.id.etNewCustomQuestion);
+        etNewAnswer = findViewById(R.id.etNewAnswer);
         etNewPassword = findViewById(R.id.etNewPassword);
         etConfirmPassword = findViewById(R.id.etConfirmPassword);
-        btnVerifyAnswer = findViewById(R.id.btnVerifyAnswer);
         btnSetPassword = findViewById(R.id.btnSetPassword);
 
-        // Display stored security question
-        String question = prefManager.getSecurityQuestion();
-        if (question != null && !question.isEmpty()) {
-            tvSecurityQuestion.setText(question);
-        } else {
-            tvSecurityQuestion.setText("What is your security question?");
-        }
+        // Display current security question
+        String currentQuestion = prefManager.getSecurityQuestion();
+        tvCurrentQuestion.setText(currentQuestion != null ? currentQuestion : "No question set");
+
+        // Setup spinner for new question
+        String[] items = new String[predefinedQuestions.length + 1];
+        System.arraycopy(predefinedQuestions, 0, items, 0, predefinedQuestions.length);
+        items[predefinedQuestions.length] = "Custom...";
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, items);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spNewQuestions.setAdapter(adapter);
+
+        spNewQuestions.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (position == predefinedQuestions.length) {
+                    etNewCustomQuestion.setVisibility(View.VISIBLE);
+                } else {
+                    etNewCustomQuestion.setVisibility(View.GONE);
+                }
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
 
         btnVerifyAnswer.setOnClickListener(v -> {
             String answer = etAnswer.getText().toString().trim();
             if (prefManager.checkSecurityAnswer(answer)) {
-                layoutNewPassword.setVisibility(View.VISIBLE);
-                btnVerifyAnswer.setVisibility(View.GONE);
-                etAnswer.setEnabled(false);
+                // Hide the entire verify section
+                verifyContainer.setVisibility(View.GONE);
+                // Show the update section
+                layoutNewData.setVisibility(View.VISIBLE);
             } else {
                 Toast.makeText(this, "Incorrect answer", Toast.LENGTH_SHORT).show();
             }
@@ -70,8 +101,32 @@ public class ResetPasswordActivity extends AppCompatActivity {
                 return;
             }
 
+            // Update password
             prefManager.setPassword(newPass);
-            Toast.makeText(this, "Password changed successfully", Toast.LENGTH_SHORT).show();
+
+            // Update security question & answer if user provided new ones
+            int pos = spNewQuestions.getSelectedItemPosition();
+            String newQuestion;
+            if (pos == predefinedQuestions.length) {
+                newQuestion = etNewCustomQuestion.getText().toString().trim();
+                if (newQuestion.isEmpty()) {
+                    Toast.makeText(this, "Please enter a custom question", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            } else {
+                newQuestion = predefinedQuestions[pos];
+            }
+
+            String newAnswer = etNewAnswer.getText().toString().trim();
+            if (!newAnswer.isEmpty()) {
+                prefManager.setSecurityQuestion(newQuestion);
+                prefManager.setSecurityAnswer(newAnswer);
+            } else if (!newQuestion.equals(prefManager.getSecurityQuestion())) {
+                Toast.makeText(this, "Please provide an answer for the new security question", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            Toast.makeText(this, "Password and security question updated successfully", Toast.LENGTH_SHORT).show();
             finish();
         });
     }
