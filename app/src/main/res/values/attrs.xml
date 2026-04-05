@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <attr name="calcDisplayBackground" format="color" />
     <attr name="calcDisplayTextColor" format="color" />
     <attr name="calcButtonBackground" format="color" />
     <attr name="calcButtonTextColor" format="color" />
     <attr name="calcHistoryTextColor" format="color" />
+    <attr name="calcHistoryBackground" format="color" />
+
 </resources>

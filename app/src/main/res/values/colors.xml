@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Use a dark background (e.g., #000000) for dark theme, or any solid color -->
     <color name="ic_launcher_background">#000000</color>
+
+    <!-- Light mode toolbar – dark enough to see white icons -->
+    <color name="toolbar_light">#909090</color>
+
+    <!-- Unified background for display and history (light mode) -->
+    <color name="display_bg_light">#E0E0E0</color>
+
+    <!-- Unified background for display and history (dark mode) -->
+    <color name="display_bg_dark">#2A2A2A</color>
 </resources>

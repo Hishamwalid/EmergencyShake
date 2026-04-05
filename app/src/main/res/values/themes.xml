@@ -1,30 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Dark theme -->
     <style name="AppTheme_Dark" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowBackground">#000000</item>
         <item name="colorPrimary">#1E1E1E</item>
         <item name="colorPrimaryDark">#0D0D0D</item>
         <item name="colorAccent">#FF9800</item>
-
-        <item name="calcDisplayBackground">#000000</item>
+        <item name="calcDisplayBackground">#2A2A2A</item>
         <item name="calcDisplayTextColor">#FFFFFF</item>
         <item name="calcButtonBackground">#2C2C2C</item>
         <item name="calcButtonTextColor">#FFFFFF</item>
         <item name="calcHistoryTextColor">#AAAAAA</item>
+        <item name="calcHistoryBackground">#2A2A2A</item>
     </style>
 
+    <!-- Light theme -->
     <style name="AppTheme_Light" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowBackground">#FFFFFF</item>
-        <item name="colorPrimary">#2196F3</item>
-        <item name="colorPrimaryDark">#1976D2</item>
+        <item name="colorPrimary">#909090</item>
+        <item name="colorPrimaryDark">#909090</item>
         <item name="colorAccent">#FF9800</item>
-
-        <item name="calcDisplayBackground">#FFFFFF</item>
+        <item name="calcDisplayBackground">#E0E0E0</item>
         <item name="calcDisplayTextColor">#000000</item>
         <item name="calcButtonBackground">#E0E0E0</item>
         <item name="calcButtonTextColor">#000000</item>
         <item name="calcHistoryTextColor">#666666</item>
+        <item name="calcHistoryBackground">#E0E0E0</item>
     </style>
 
 </resources>

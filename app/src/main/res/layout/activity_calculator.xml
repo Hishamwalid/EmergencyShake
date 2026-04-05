@@ -3,16 +3,15 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/calcDisplayBackground">
+    android:background="?android:windowBackground">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark" />
+        android:theme="?attr/actionBarTheme" />
 
-    <!-- History area – same background as root -->
     <ScrollView
         android:id="@+id/historyScroll"
         android:layout_width="match_parent"
@@ -28,13 +27,13 @@
             android:layout_height="wrap_content" />
     </ScrollView>
 
-    <!-- Current calculation area -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="0.6"
         android:orientation="vertical"
-        android:gravity="bottom">
+        android:gravity="bottom"
+        android:background="?attr/calcDisplayBackground">
 
         <TextView
             android:id="@+id/preview"
@@ -45,8 +44,7 @@
             android:padding="12dp"
             android:paddingBottom="4dp"
             android:gravity="end"
-            android:alpha="0.6"
-            android:background="?attr/calcDisplayBackground" />
+            android:alpha="0.6" />
 
         <EditText
             android:id="@+id/display"
@@ -55,7 +53,7 @@
             android:textSize="36sp"
             android:gravity="end|center_vertical"
             android:padding="12dp"
-            android:background="?attr/calcDisplayBackground"
+            android:background="@android:color/transparent"
             android:textColor="?attr/calcDisplayTextColor"
             android:text="0"
             android:enabled="false"
@@ -63,7 +61,6 @@
             android:ellipsize="start" />
     </LinearLayout>
 
-    <!-- Buttons grid (unchanged) -->
     <TableLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
