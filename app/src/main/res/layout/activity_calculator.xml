@@ -16,24 +16,30 @@
         android:id="@+id/historyScroll"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="0.4"
-        android:background="?attr/calcDisplayBackground"
-        android:padding="8dp">
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:scrollbars="vertical"
+        android:fadeScrollbars="false"
+        android:isScrollContainer="true"
+        android:nestedScrollingEnabled="true"
+        android:background="?attr/calcDisplayBackground">
 
         <LinearLayout
             android:id="@+id/historyContainer"
-            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:gravity="bottom"
+            android:descendantFocusability="blocksDescendants" />
     </ScrollView>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="0.6"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:gravity="bottom"
-        android:background="?attr/calcDisplayBackground">
+        android:background="?attr/calcDisplayBackground"
+        android:paddingBottom="8dp">
 
         <TextView
             android:id="@+id/preview"
@@ -41,16 +47,17 @@
             android:layout_height="wrap_content"
             android:textSize="14sp"
             android:textColor="?attr/calcHistoryTextColor"
-            android:padding="12dp"
-            android:paddingBottom="4dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="4dp"
             android:gravity="end"
             android:alpha="0.6" />
 
         <EditText
             android:id="@+id/display"
             android:layout_width="match_parent"
-            android:layout_height="70dp"
-            android:textSize="36sp"
+            android:layout_height="80dp"
+            android:textSize="42sp"
             android:gravity="end|center_vertical"
             android:padding="12dp"
             android:background="@android:color/transparent"
@@ -64,11 +71,9 @@
     <TableLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
         android:stretchColumns="*"
         android:shrinkColumns="*"
-        android:layout_margin="8dp"
-        android:layout_marginTop="8dp">
+        android:layout_margin="8dp">
 
         <TableRow>
             <Button style="@style/CalcButtonGray" android:text="C" android:onClick="onClearClick" />

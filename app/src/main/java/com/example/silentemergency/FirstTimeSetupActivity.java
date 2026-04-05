@@ -25,12 +25,10 @@ public class FirstTimeSetupActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        prefManager = new PrefManager(this);
-        // Apply current theme (dark/light) before layout
-        if (prefManager.isDarkMode()) setTheme(R.style.AppTheme_Dark);
-        else setTheme(R.style.AppTheme_Light);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_first_time_setup);
+
+        prefManager = new PrefManager(this);
 
         etPassword = findViewById(R.id.etPassword);
         etConfirmPassword = findViewById(R.id.etConfirmPassword);
@@ -39,7 +37,7 @@ public class FirstTimeSetupActivity extends AppCompatActivity {
         etCustomQuestion = findViewById(R.id.etCustomQuestion);
         btnSave = findViewById(R.id.btnSave);
 
-        // Build list with "Custom" option at the end
+        // Build list with "Custom..." option
         String[] items = new String[predefinedQuestions.length + 1];
         System.arraycopy(predefinedQuestions, 0, items, 0, predefinedQuestions.length);
         items[predefinedQuestions.length] = "Custom...";
