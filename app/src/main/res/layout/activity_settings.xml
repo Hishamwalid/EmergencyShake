@@ -64,21 +64,25 @@
                 android:layout_marginBottom="24dp"
                 android:textColor="?android:textColorPrimary" />
 
+            <!-- Toggle button for Activate/Deactivate -->
             <Button
-                android:id="@+id/btnActivate"
+                android:id="@+id/btnToggleProtection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:text="Activate Protection"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
                 android:background="@drawable/btn_monochrome_primary"
-                android:textColor="?android:textColorPrimary" />
+                android:textColor="?android:textColorPrimary"
+                android:layout_marginBottom="16dp" />
 
-            <Button
-                android:id="@+id/btnDeactivate"
-                android:text="Deactivate Protection"
+            <!-- Timer display -->
+            <TextView
+                android:id="@+id/tvTimer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/btn_monochrome_primary"
+                android:text="Protection inactive"
+                android:gravity="center"
+                android:textSize="16sp"
+                android:layout_marginBottom="24dp"
                 android:textColor="?android:textColorPrimary" />
 
         </LinearLayout>
