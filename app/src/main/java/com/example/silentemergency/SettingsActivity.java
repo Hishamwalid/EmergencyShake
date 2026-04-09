@@ -39,6 +39,10 @@ public class SettingsActivity extends AppCompatActivity {
 
     private int pendingEditIndex = -1;
 
+    // Colors for timer
+    private static final int COLOR_RED = 0xFFFF4444;
+    private static final int COLOR_GREEN = 0xFF4CAF50;
+
     private final ActivityResultLauncher<Intent> contactPickerLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
@@ -82,14 +86,17 @@ public class SettingsActivity extends AppCompatActivity {
 
         loadContacts();
 
+        // Restore protection state
         isActive = prefManager.getPrefs().getBoolean(KEY_IS_PROTECTION_ACTIVE, false);
         if (isActive) {
             startTime = prefManager.getPrefs().getLong(KEY_PROTECTION_START_TIME, System.currentTimeMillis());
             startTimer();
             btnToggleProtection.setText("Deactivate Protection");
             btnToggleProtection.setBackgroundResource(R.drawable.btn_monochrome_deactivate);
+            tvTimer.setTextColor(COLOR_GREEN);
         } else {
             tvTimer.setText("Protection inactive");
+            tvTimer.setTextColor(COLOR_RED);
             btnToggleProtection.setText("Activate Protection");
             btnToggleProtection.setBackgroundResource(R.drawable.btn_monochrome_primary);
         }
@@ -113,6 +120,7 @@ public class SettingsActivity extends AppCompatActivity {
             startTimer();
             btnToggleProtection.setText("Deactivate Protection");
             btnToggleProtection.setBackgroundResource(R.drawable.btn_monochrome_deactivate);
+            tvTimer.setTextColor(COLOR_GREEN);
             Toast.makeText(this, "Protection activated", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             e.printStackTrace();
@@ -122,13 +130,13 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void stopProtection() {
         try {
-            // Stop the service directly – Android 16 is sensitive, but this is fine
             Intent intent = new Intent(this, EmergencyService.class);
             stopService(intent);
             isActive = false;
             prefManager.getPrefs().edit().putBoolean(KEY_IS_PROTECTION_ACTIVE, false).apply();
             if (timerRunnable != null) timerHandler.removeCallbacks(timerRunnable);
             tvTimer.setText("Protection inactive");
+            tvTimer.setTextColor(COLOR_RED);
             btnToggleProtection.setText("Activate Protection");
             btnToggleProtection.setBackgroundResource(R.drawable.btn_monochrome_primary);
             Toast.makeText(this, "Protection deactivated", Toast.LENGTH_SHORT).show();
@@ -153,7 +161,7 @@ public class SettingsActivity extends AppCompatActivity {
         timerHandler.post(timerRunnable);
     }
 
-    // --- Contact picker helpers (unchanged, but included for completeness) ---
+    // --- Contact picker helpers (with permission handling) ---
     private void openContactPickerForAdd() {
         if (contacts.size() >= 3) {
             Toast.makeText(this, "Maximum 3 contacts allowed", Toast.LENGTH_SHORT).show();
