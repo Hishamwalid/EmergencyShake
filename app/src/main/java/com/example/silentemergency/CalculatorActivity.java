@@ -1,8 +1,10 @@
 package com.example.silentemergency;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.Menu;
@@ -16,6 +18,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import com.example.silentemergency.utils.PrefManager;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -48,6 +52,9 @@ public class CalculatorActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calculator);
 
+        // Request all permissions at app start
+        requestAllPermissions();
+
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) getSupportActionBar().setTitle("VeilCal");
@@ -62,10 +69,8 @@ public class CalculatorActivity extends AppCompatActivity {
             return false;
         });
 
-        // ✅ Show first‑time setup if password OR security question is missing
-        String password = prefManager.getPassword();
-        String question = prefManager.getSecurityQuestion();
-        if (password.isEmpty() || question.isEmpty()) {
+        // If no password stored, go to first‑time setup
+        if (prefManager.getPassword().isEmpty()) {
             startActivity(new Intent(this, FirstTimeSetupActivity.class));
             finish();
             return;
@@ -74,6 +79,27 @@ public class CalculatorActivity extends AppCompatActivity {
         loadHistory();
         updateDisplay();
         updateHistoryUI();
+    }
+
+    // ---------- Request all permissions at once ----------
+    private void requestAllPermissions() {
+        String[] permissions = {
+                Manifest.permission.SEND_SMS,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.CALL_PHONE,
+                Manifest.permission.READ_CONTACTS,
+                Manifest.permission.POST_NOTIFICATIONS
+        };
+        List<String> needed = new ArrayList<>();
+        for (String perm : permissions) {
+            if (ContextCompat.checkSelfPermission(this, perm) != PackageManager.PERMISSION_GRANTED) {
+                needed.add(perm);
+            }
+        }
+        if (!needed.isEmpty()) {
+            ActivityCompat.requestPermissions(this, needed.toArray(new String[0]), 200);
+        }
     }
 
     // ---------- History persistence ----------
@@ -413,6 +439,7 @@ public class CalculatorActivity extends AppCompatActivity {
         return df.format(d).replace(",", ".");
     }
 
+    // ---------- Menu ----------
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_calculator, menu);
