@@ -1,7 +1,11 @@
 package com.example.silentemergency;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.provider.ContactsContract;
 import android.view.View;
 import android.widget.*;
 import androidx.appcompat.app.AlertDialog;
@@ -17,8 +21,17 @@ public class SettingsActivity extends AppCompatActivity {
     private PrefManager prefManager;
     private LinearLayout contactsContainer;
     private Switch swDarkMode;
-    private Button btnActivate, btnDeactivate;
+    private Button btnToggleProtection;
+    private TextView tvTimer;
     private List<String> contacts = new ArrayList<>();
+
+    private boolean isActive = false;
+    private long startTime = 0;
+    private Handler timerHandler = new Handler();
+    private Runnable timerRunnable;
+
+    private static final int PICK_CONTACT_REQUEST = 1;
+    private int pendingEditIndex = -1; // used when editing a contact
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,9 +51,9 @@ public class SettingsActivity extends AppCompatActivity {
 
         contactsContainer = findViewById(R.id.contactsContainer);
         swDarkMode = findViewById(R.id.swDarkMode);
-        btnActivate = findViewById(R.id.btnActivate);
-        btnDeactivate = findViewById(R.id.btnDeactivate);
-        findViewById(R.id.btnAddContact).setOnClickListener(v -> showAddContactDialog());
+        btnToggleProtection = findViewById(R.id.btnToggleProtection);
+        tvTimer = findViewById(R.id.tvTimer);
+        findViewById(R.id.btnAddContact).setOnClickListener(v -> openContactPickerForAdd());
 
         loadContacts();
 
@@ -50,19 +63,142 @@ public class SettingsActivity extends AppCompatActivity {
             recreate();
         });
 
-        btnActivate.setOnClickListener(v -> {
-            Intent intent = new Intent(this, EmergencyService.class);
-            startService(intent);
-            Toast.makeText(this, "Protection activated", Toast.LENGTH_SHORT).show();
-        });
+        // Check if service is already running
+        isActive = isServiceRunning();
+        if (isActive) {
+            startTime = prefManager.getPrefs().getLong("protection_start_time", System.currentTimeMillis());
+            startTimer();
+            btnToggleProtection.setText("Deactivate Protection");
+            btnToggleProtection.setBackgroundResource(R.drawable.btn_monochrome_deactivate);
+        } else {
+            tvTimer.setText("Protection inactive");
+        }
 
-        btnDeactivate.setOnClickListener(v -> {
-            Intent intent = new Intent(this, EmergencyService.class);
-            stopService(intent);
-            Toast.makeText(this, "Protection deactivated", Toast.LENGTH_SHORT).show();
+        btnToggleProtection.setOnClickListener(v -> {
+            if (isActive) {
+                stopProtection();
+            } else {
+                startProtection();
+            }
         });
     }
 
+    private boolean isServiceRunning() {
+        android.app.ActivityManager manager = (android.app.ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        for (android.app.ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (EmergencyService.class.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void startProtection() {
+        Intent intent = new Intent(this, EmergencyService.class);
+        startService(intent);
+        isActive = true;
+        startTime = System.currentTimeMillis();
+        prefManager.getPrefs().edit().putLong("protection_start_time", startTime).apply();
+        startTimer();
+        btnToggleProtection.setText("Deactivate Protection");
+        btnToggleProtection.setBackgroundResource(R.drawable.btn_monochrome_deactivate);
+        Toast.makeText(this, "Protection activated", Toast.LENGTH_SHORT).show();
+    }
+
+    private void stopProtection() {
+        Intent intent = new Intent(this, EmergencyService.class);
+        stopService(intent);
+        isActive = false;
+        if (timerHandler != null && timerRunnable != null) {
+            timerHandler.removeCallbacks(timerRunnable);
+        }
+        tvTimer.setText("Protection inactive");
+        btnToggleProtection.setText("Activate Protection");
+        btnToggleProtection.setBackgroundResource(R.drawable.btn_monochrome_primary);
+        Toast.makeText(this, "Protection deactivated", Toast.LENGTH_SHORT).show();
+    }
+
+    private void startTimer() {
+        timerRunnable = new Runnable() {
+            @Override
+            public void run() {
+                long elapsed = System.currentTimeMillis() - startTime;
+                long seconds = (elapsed / 1000) % 60;
+                long minutes = (elapsed / (1000 * 60)) % 60;
+                long hours = (elapsed / (1000 * 60 * 60));
+                String time = String.format("%02d:%02d:%02d", hours, minutes, seconds);
+                tvTimer.setText("Protection active for: " + time);
+                timerHandler.postDelayed(this, 1000);
+            }
+        };
+        timerHandler.post(timerRunnable);
+    }
+
+    // --- Contact management with contact picker ---
+    private void openContactPickerForAdd() {
+        if (contacts.size() >= 3) {
+            Toast.makeText(this, "Maximum 3 contacts allowed", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        pendingEditIndex = -1;
+        Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
+        startActivityForResult(intent, PICK_CONTACT_REQUEST);
+    }
+
+    private void openContactPickerForEdit(int index) {
+        pendingEditIndex = index;
+        Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
+        startActivityForResult(intent, PICK_CONTACT_REQUEST);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PICK_CONTACT_REQUEST && resultCode == RESULT_OK && data != null) {
+            Uri contactUri = data.getData();
+            String phoneNumber = getPhoneNumberFromUri(contactUri);
+            if (phoneNumber != null && !phoneNumber.isEmpty()) {
+                if (pendingEditIndex == -1) {
+                    // Add new contact
+                    contacts.add(phoneNumber);
+                } else {
+                    // Edit existing contact
+                    contacts.set(pendingEditIndex, phoneNumber);
+                    pendingEditIndex = -1;
+                }
+                saveContacts();
+                refreshContactList();
+            } else {
+                Toast.makeText(this, "No phone number found for this contact", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private String getPhoneNumberFromUri(Uri uri) {
+        String phoneNumber = null;
+        Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            String contactId = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
+            Cursor phoneCursor = getContentResolver().query(
+                    ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                    null,
+                    ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                    new String[]{contactId},
+                    null);
+            if (phoneCursor != null && phoneCursor.moveToFirst()) {
+                phoneNumber = phoneCursor.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                phoneCursor.close();
+            }
+            cursor.close();
+        }
+        // Remove spaces, dashes, parentheses
+        if (phoneNumber != null) {
+            phoneNumber = phoneNumber.replaceAll("[\\s\\-()]", "");
+        }
+        return phoneNumber;
+    }
+
+    // --- Contact list UI ---
     private void loadContacts() {
         contacts.clear();
         for (int i = 1; i <= 3; i++) {
@@ -84,7 +220,7 @@ public class SettingsActivity extends AppCompatActivity {
             Button btnRemove = itemView.findViewById(R.id.btnRemove);
             tvContact.setText(contact);
             final int index = i;
-            btnEdit.setOnClickListener(v -> showEditContactDialog(index, contact));
+            btnEdit.setOnClickListener(v -> openContactPickerForEdit(index));
             btnRemove.setOnClickListener(v -> {
                 contacts.remove(index);
                 saveContacts();
@@ -92,43 +228,6 @@ public class SettingsActivity extends AppCompatActivity {
             });
             contactsContainer.addView(itemView);
         }
-    }
-
-    private void showAddContactDialog() {
-        if (contacts.size() >= 3) {
-            Toast.makeText(this, "Maximum 3 contacts allowed", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        showContactDialog(null, -1);
-    }
-
-    private void showEditContactDialog(int index, String existing) {
-        showContactDialog(existing, index);
-    }
-
-    private void showContactDialog(String existing, int index) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        View view = getLayoutInflater().inflate(R.layout.dialog_contact, null);
-        EditText etContact = view.findViewById(R.id.etContact);
-        if (existing != null) etContact.setText(existing);
-        builder.setView(view)
-                .setTitle(existing == null ? "Add Contact" : "Edit Contact")
-                .setPositiveButton("Save", (dialog, which) -> {
-                    String number = etContact.getText().toString().trim();
-                    if (number.isEmpty()) {
-                        Toast.makeText(this, "Number cannot be empty", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    if (existing == null) {
-                        contacts.add(number);
-                    } else {
-                        contacts.set(index, number);
-                    }
-                    saveContacts();
-                    refreshContactList();
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
     }
 
     private void saveContacts() {
