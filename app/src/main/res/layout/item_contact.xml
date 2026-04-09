@@ -26,6 +26,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Remove"
+        android:layout_marginStart="12dp"
         android:background="@drawable/btn_monochrome_primary"
         android:textColor="?android:textColorPrimary" />
 </LinearLayout>
