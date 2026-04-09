@@ -32,7 +32,6 @@ public class SettingsActivity extends AppCompatActivity {
     private LinearLayout contactsContainer;
     private Button btnToggleProtection;
     private TextView tvTimer;
-    private Switch swSmsOnly;
     private List<String> contacts = new ArrayList<>(); // stores "Name:Number"
 
     private boolean isActive = false;
@@ -84,16 +83,9 @@ public class SettingsActivity extends AppCompatActivity {
         contactsContainer = findViewById(R.id.contactsContainer);
         btnToggleProtection = findViewById(R.id.btnToggleProtection);
         tvTimer = findViewById(R.id.tvTimer);
-        swSmsOnly = findViewById(R.id.swSmsOnly);
         findViewById(R.id.btnAddContact).setOnClickListener(v -> showAddContactOptions());
 
         loadContacts();
-
-        // SMS‑only preference
-        swSmsOnly.setChecked(prefManager.isSmsOnly());
-        swSmsOnly.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            prefManager.setSmsOnly(isChecked);
-        });
 
         // Restore protection state
         isActive = prefManager.getPrefs().getBoolean(KEY_IS_PROTECTION_ACTIVE, false);
@@ -170,7 +162,7 @@ public class SettingsActivity extends AppCompatActivity {
         timerHandler.post(timerRunnable);
     }
 
-    // --- Contact management ---
+    // --- Contact management (unchanged) ---
     private void showAddContactOptions() {
         if (contacts.size() >= 3) {
             Toast.makeText(this, "Maximum 3 contacts allowed", Toast.LENGTH_SHORT).show();

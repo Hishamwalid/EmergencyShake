@@ -57,7 +57,7 @@
         android:layout_marginBottom="32dp"
         android:textColor="?android:textColorPrimary" />
 
-    <!-- SMS‑only toggle (monochrome) -->
+    <!-- SMS‑only toggle – bold label, monochrome switch with theme contrast -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -70,6 +70,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="SMS only"
+            android:textStyle="bold"
             android:textSize="16sp"
             android:textColor="?android:textColorPrimary" />
 
