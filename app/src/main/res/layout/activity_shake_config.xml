@@ -19,7 +19,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:max="250"
-        android:progress="150" />
+        android:progress="150"
+        android:progressTint="?attr/calcButtonBackground"
+        android:thumbTint="?attr/calcButtonBackground" />
 
     <TextView
         android:id="@+id/tvSensitivityVal"
@@ -42,7 +44,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:max="9"
-        android:progress="2" />
+        android:progress="2"
+        android:progressTint="?attr/calcButtonBackground"
+        android:thumbTint="?attr/calcButtonBackground" />
 
     <TextView
         android:id="@+id/tvShakeCountVal"
@@ -50,6 +54,31 @@
         android:layout_height="wrap_content"
         android:text="3"
         android:gravity="center"
+        android:layout_marginBottom="32dp"
         android:textColor="?android:textColorPrimary" />
+
+    <!-- SMS‑only toggle (monochrome) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="SMS only"
+            android:textSize="16sp"
+            android:textColor="?android:textColorPrimary" />
+
+        <Switch
+            android:id="@+id/swSmsOnly"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:trackTint="?attr/calcButtonBackground"
+            android:thumbTint="?attr/calcButtonBackground" />
+    </LinearLayout>
 
 </LinearLayout>

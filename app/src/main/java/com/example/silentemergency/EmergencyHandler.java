@@ -10,6 +10,7 @@ public class EmergencyHandler extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         PrefManager pref = new PrefManager(this);
+        boolean smsOnly = pref.isSmsOnly();
         boolean anyContact = false;
         for (int i = 1; i <= 3; i++) {
             String contact = pref.getEmergencyNumber(i);
@@ -19,7 +20,11 @@ public class EmergencyHandler extends Service {
             }
         }
         if (anyContact) {
-            Toast.makeText(this, "EMERGENCY! SMS & call would be sent to all contacts.", Toast.LENGTH_LONG).show();
+            if (smsOnly) {
+                Toast.makeText(this, "EMERGENCY! SMS would be sent to all contacts (call skipped).", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(this, "EMERGENCY! SMS & call would be sent to all contacts.", Toast.LENGTH_LONG).show();
+            }
         } else {
             Toast.makeText(this, "No emergency contacts set", Toast.LENGTH_SHORT).show();
         }

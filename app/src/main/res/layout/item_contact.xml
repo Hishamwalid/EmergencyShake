@@ -10,22 +10,25 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textSize="16sp"
-        android:textColor="?android:textColorPrimary" />
+        android:textSize="14sp"
+        android:textColor="?android:textColorPrimary"
+        android:maxLines="2"
+        android:ellipsize="end" />
 
     <Button
         android:id="@+id/btnEdit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Edit"
-        android:background="@drawable/btn_monochrome_primary"
-        android:textColor="?android:textColorPrimary" />
+        android:textColor="#000000"
+        android:background="@drawable/btn_monochrome_primary" />
 
     <Button
         android:id="@+id/btnRemove"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Remove"
-        android:background="@drawable/btn_monochrome_primary"
-        android:textColor="?android:textColorPrimary" />
+        android:layout_marginStart="12dp"
+        android:textColor="#000000"
+        android:background="@drawable/btn_monochrome_primary" />
 </LinearLayout>

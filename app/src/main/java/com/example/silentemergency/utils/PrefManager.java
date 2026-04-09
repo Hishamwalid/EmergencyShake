@@ -14,6 +14,8 @@ public class PrefManager {
     private static final String KEY_DARK_MODE = "darkMode";
     // Legacy single contact (keep for compatibility, but use slot methods)
     private static final String KEY_EMERGENCY_NUMBER = "emergencyNumber";
+    // SMS-only preference (no phone call)
+    private static final String KEY_SMS_ONLY = "sms_only";
 
     private SharedPreferences prefs;
     private SharedPreferences.Editor editor;
@@ -114,5 +116,15 @@ public class PrefManager {
 
     public String getEmergencyNumber() {
         return prefs.getString(KEY_EMERGENCY_NUMBER, "");
+    }
+
+    // ---------- SMS only (no phone call) ----------
+    public void setSmsOnly(boolean smsOnly) {
+        editor.putBoolean(KEY_SMS_ONLY, smsOnly);
+        editor.apply();
+    }
+
+    public boolean isSmsOnly() {
+        return prefs.getBoolean(KEY_SMS_ONLY, false);
     }
 }

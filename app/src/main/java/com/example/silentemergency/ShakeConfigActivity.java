@@ -2,6 +2,7 @@ package com.example.silentemergency;
 
 import android.os.Bundle;
 import android.widget.SeekBar;
+import android.widget.Switch;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.silentemergency.utils.PrefManager;
@@ -10,6 +11,7 @@ public class ShakeConfigActivity extends AppCompatActivity {
 
     private SeekBar seekSensitivity, seekShakeCount;
     private TextView tvSensitivityVal, tvShakeCountVal;
+    private Switch swSmsOnly;
     private PrefManager prefManager;
 
     @Override
@@ -24,13 +26,21 @@ public class ShakeConfigActivity extends AppCompatActivity {
         seekShakeCount = findViewById(R.id.seekShakeCount);
         tvSensitivityVal = findViewById(R.id.tvSensitivityVal);
         tvShakeCountVal = findViewById(R.id.tvShakeCountVal);
+        swSmsOnly = findViewById(R.id.swSmsOnly);
 
+        // Load current values
         float sens = prefManager.getShakeSensitivity();
         int count = prefManager.getShakeCount();
         seekSensitivity.setProgress((int)(sens * 10));
         seekShakeCount.setProgress(count - 1);
         tvSensitivityVal.setText(String.format("%.1f", sens));
         tvShakeCountVal.setText(String.valueOf(count));
+
+        // SMS‑only preference
+        swSmsOnly.setChecked(prefManager.isSmsOnly());
+        swSmsOnly.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            prefManager.setSmsOnly(isChecked);
+        });
 
         seekSensitivity.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
