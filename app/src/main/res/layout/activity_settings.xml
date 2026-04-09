@@ -1,11 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
-    android:padding="16dp"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-    <TextView android:text="Emergency Contact" android:textStyle="bold" android:layout_marginTop="16dp"/>
-    <EditText android:id="@+id/etContact" android:hint="Phone number" android:inputType="phone" android:layout_marginBottom="8dp"/>
-    <Button android:id="@+id/btnSaveContact" android:text="Save Contact"/>
-    <Switch android:id="@+id/swDarkMode" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Dark Mode" android:layout_marginTop="24dp"/>
+    android:layout_height="match_parent"
+    android:background="?android:windowBackground">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark">
+
+        <ImageButton
+            android:id="@+id/btnShakeSettings"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_settings"
+            android:background="@android:color/transparent"
+            android:scaleType="centerInside"
+            android:layout_gravity="end" />
+    </androidx.appcompat.widget.Toolbar>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:text="Emergency Contacts"
+                android:textStyle="bold"
+                android:layout_marginTop="16dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="?android:textColorPrimary" />
+
+            <LinearLayout
+                android:id="@+id/contactsContainer"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp" />
+
+            <Button
+                android:id="@+id/btnAddContact"
+                android:text="Add Contact"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/btn_monochrome_primary"
+                android:textColor="?android:textColorPrimary" />
+
+            <Switch
+                android:id="@+id/swDarkMode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Dark Mode"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="24dp"
+                android:textColor="?android:textColorPrimary" />
+
+            <Button
+                android:id="@+id/btnActivate"
+                android:text="Activate Protection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/btn_monochrome_primary"
+                android:textColor="?android:textColorPrimary" />
+
+            <Button
+                android:id="@+id/btnDeactivate"
+                android:text="Deactivate Protection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/btn_monochrome_primary"
+                android:textColor="?android:textColorPrimary" />
+
+        </LinearLayout>
+    </ScrollView>
 </LinearLayout>
