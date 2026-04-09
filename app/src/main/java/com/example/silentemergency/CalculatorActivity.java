@@ -18,6 +18,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import com.example.silentemergency.utils.PrefManager;
 import org.json.JSONArray;
+import org.json.JSONException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,14 +57,15 @@ public class CalculatorActivity extends AppCompatActivity {
         historyContainer = findViewById(R.id.historyContainer);
         historyScroll = findViewById(R.id.historyScroll);
 
-        // Fix scrolling on physical phones
         historyScroll.setOnTouchListener((v, event) -> {
             v.getParent().requestDisallowInterceptTouchEvent(true);
             return false;
         });
 
-        // First‑time setup
-        if (prefManager.isFirstTime()) {
+        // ✅ Show first‑time setup if password OR security question is missing
+        String password = prefManager.getPassword();
+        String question = prefManager.getSecurityQuestion();
+        if (password.isEmpty() || question.isEmpty()) {
             startActivity(new Intent(this, FirstTimeSetupActivity.class));
             finish();
             return;
@@ -74,7 +76,77 @@ public class CalculatorActivity extends AppCompatActivity {
         updateHistoryUI();
     }
 
-    // --- Number input ---
+    // ---------- History persistence ----------
+    private void loadHistory() {
+        SharedPreferences prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+        String json = prefs.getString(KEY_HISTORY, "");
+        if (json.isEmpty()) return;
+        try {
+            JSONArray arr = new JSONArray(json);
+            historyEntries.clear();
+            for (int i = 0; i < arr.length(); i++) {
+                historyEntries.add(arr.getString(i));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void saveHistory() {
+        SharedPreferences prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+        JSONArray arr = new JSONArray(historyEntries);
+        prefs.edit().putString(KEY_HISTORY, arr.toString()).apply();
+    }
+
+    private void addToHistory(String expr, String result) {
+        historyEntries.add(0, expr + " = " + result);
+        if (historyEntries.size() > 20) historyEntries.remove(historyEntries.size() - 1);
+        saveHistory();
+        updateHistoryUI();
+        scrollHistoryToTop();
+    }
+
+    private void clearHistory() {
+        historyEntries.clear();
+        saveHistory();
+        updateHistoryUI();
+    }
+
+    private void updateHistoryUI() {
+        historyContainer.removeAllViews();
+        TypedValue typedValue = new TypedValue();
+        getTheme().resolveAttribute(R.attr.calcHistoryTextColor, typedValue, true);
+        int color = typedValue.data;
+
+        for (String entry : historyEntries) {
+            TextView tv = new TextView(this);
+            tv.setText(entry);
+            tv.setTextColor(color);
+            tv.setTextSize(14);
+            tv.setPadding(0, 8, 0, 8);
+            tv.setGravity(android.view.Gravity.END);
+            historyContainer.addView(tv);
+        }
+        if (historyScroll != null) {
+            historyScroll.post(() -> historyScroll.fullScroll(View.FOCUS_UP));
+        }
+    }
+
+    private void scrollHistoryToTop() {
+        if (historyScroll != null) {
+            historyScroll.post(() -> historyScroll.fullScroll(View.FOCUS_UP));
+        }
+    }
+
+    // ---------- Input handling ----------
+    private String getLastNumber() {
+        List<String> tokens = tokenizeExpression(currentExpression);
+        if (tokens.isEmpty()) return "";
+        String last = tokens.get(tokens.size() - 1);
+        if (isOperator(last)) return "";
+        return last;
+    }
+
     public void onNumberClick(View view) {
         Button b = (Button) view;
         String digit = b.getText().toString();
@@ -82,30 +154,38 @@ public class CalculatorActivity extends AppCompatActivity {
         if (isResultDisplayed) {
             currentExpression = digit.equals(".") ? "0." : digit;
             isResultDisplayed = false;
-        } else {
-            if (digit.equals(".")) {
-                handleDotInput();
+            updateDisplay();
+            evaluatePreview();
+            return;
+        }
+
+        if (digit.equals(".")) {
+            if (currentExpression.equals("0")) {
+                currentExpression = "0.";
+            } else if (currentExpression.endsWith(".")) {
+                return;
+            } else if (lastCharIsOperator()) {
+                currentExpression += "0.";
+            } else if (getLastNumber().contains(".")) {
+                return;
             } else {
-                if (currentExpression.equals("0")) currentExpression = digit;
-                else currentExpression += digit;
+                currentExpression += ".";
+            }
+        } else {
+            if (currentExpression.equals("0") && !digit.equals(".")) {
+                currentExpression = digit;
+            } else {
+                currentExpression += digit;
             }
         }
+        limitDigits();
         updateDisplay();
         evaluatePreview();
-    }
-
-    private void handleDotInput() {
-        String[] parts = currentExpression.split("[+−×÷^]");
-        String lastNumber = parts[parts.length - 1];
-        if (!lastNumber.contains(".")) {
-            currentExpression += ".";
-        }
     }
 
     public void onOperatorClick(View view) {
         Button b = (Button) view;
         String op = b.getText().toString();
-
         if (isResultDisplayed) {
             currentExpression = lastResult + op;
             isResultDisplayed = false;
@@ -117,6 +197,29 @@ public class CalculatorActivity extends AppCompatActivity {
             }
         }
         updateDisplay();
+        evaluatePreview();
+    }
+
+    public void onBackspaceClick(View view) {
+        if (isResultDisplayed) {
+            onClearClick(null);
+            return;
+        }
+        if (currentExpression.length() > 0) {
+            currentExpression = currentExpression.substring(0, currentExpression.length() - 1);
+            if (currentExpression.isEmpty()) currentExpression = "0";
+        }
+        updateDisplay();
+        evaluatePreview();
+    }
+
+    public void onClearClick(View view) {
+        currentExpression = "0";
+        isResultDisplayed = false;
+        lastResult = "";
+        clearHistory();
+        updateDisplay();
+        preview.setText("");
     }
 
     public void onPercentClick(View view) {
@@ -146,7 +249,6 @@ public class CalculatorActivity extends AppCompatActivity {
     public void onEqualClick(View view) {
         String storedPass = prefManager.getPassword();
         if (!storedPass.isEmpty() && currentExpression.equals(storedPass)) {
-            // Correct password – open hidden emergency settings
             startActivity(new Intent(this, SettingsActivity.class));
             currentExpression = "0";
             updateDisplay();
@@ -158,10 +260,8 @@ public class CalculatorActivity extends AppCompatActivity {
             while (lastCharIsOperator(exprToEval)) {
                 exprToEval = exprToEval.substring(0, exprToEval.length() - 1);
             }
-
             double result = evaluateExpression(exprToEval);
             String resultStr = formatNumber(result);
-
             addToHistory(exprToEval, resultStr);
             lastResult = resultStr;
             currentExpression = resultStr;
@@ -172,10 +272,11 @@ public class CalculatorActivity extends AppCompatActivity {
             Toast.makeText(this, "Invalid Format", Toast.LENGTH_SHORT).show();
             display.setText("Error");
             currentExpression = "0";
+            isResultDisplayed = false;
         }
     }
 
-    // --- Math evaluation (BODMAS) ---
+    // ---------- Math evaluation ----------
     private double evaluateExpression(String expr) {
         String sanitized = expr.replace("×", "*").replace("÷", "/").replace("−", "-");
         return evaluateFull(sanitized);
@@ -185,7 +286,6 @@ public class CalculatorActivity extends AppCompatActivity {
         List<String> tokens = tokenize(expr);
         if (tokens.isEmpty()) return 0;
 
-        // Powers
         List<String> postPower = new ArrayList<>();
         for (int i = 0; i < tokens.size(); i++) {
             if (tokens.get(i).equals("^")) {
@@ -195,7 +295,6 @@ public class CalculatorActivity extends AppCompatActivity {
             } else postPower.add(tokens.get(i));
         }
 
-        // Multiplication & Division
         List<String> postMD = new ArrayList<>();
         for (int i = 0; i < postPower.size(); i++) {
             String t = postPower.get(i);
@@ -206,7 +305,6 @@ public class CalculatorActivity extends AppCompatActivity {
             } else postMD.add(t);
         }
 
-        // Addition & Subtraction
         double result = Double.parseDouble(postMD.get(0));
         for (int i = 1; i < postMD.size(); i += 2) {
             String op = postMD.get(i);
@@ -232,9 +330,67 @@ public class CalculatorActivity extends AppCompatActivity {
         return tokens;
     }
 
-    // --- Helpers ---
+    private List<String> tokenizeExpression(String expr) {
+        List<String> tokens = new ArrayList<>();
+        StringBuilder cur = new StringBuilder();
+        for (int i = 0; i < expr.length(); i++) {
+            char c = expr.charAt(i);
+            if (c == '+' || c == '−' || c == '×' || c == '÷' || c == '^') {
+                if (cur.length() > 0) {
+                    tokens.add(cur.toString());
+                    cur.setLength(0);
+                }
+                tokens.add(String.valueOf(c));
+            } else {
+                cur.append(c);
+            }
+        }
+        if (cur.length() > 0) tokens.add(cur.toString());
+        return tokens;
+    }
+
+    private void limitDigits() {
+        List<String> tokens = tokenizeExpression(currentExpression);
+        StringBuilder limited = new StringBuilder();
+        for (String token : tokens) {
+            if (isOperator(token)) {
+                limited.append(token);
+            } else {
+                int dotIndex = token.indexOf('.');
+                if (dotIndex != -1) {
+                    String intPart = token.substring(0, dotIndex);
+                    String decPart = token.substring(dotIndex);
+                    if (intPart.length() > 12) {
+                        intPart = intPart.substring(0, 12);
+                    }
+                    limited.append(intPart).append(decPart);
+                } else {
+                    if (token.length() > 12) {
+                        token = token.substring(0, 12);
+                    }
+                    limited.append(token);
+                }
+            }
+        }
+        currentExpression = limited.toString();
+        if (currentExpression.isEmpty()) currentExpression = "0";
+    }
+
     private void updateDisplay() {
         display.setText(currentExpression);
+    }
+
+    private void evaluatePreview() {
+        if (isResultDisplayed || currentExpression.isEmpty() || lastCharIsOperator() || currentExpression.endsWith(".")) {
+            preview.setText("");
+            return;
+        }
+        try {
+            double res = evaluateExpression(currentExpression);
+            preview.setText("= " + formatNumber(res));
+        } catch (Exception e) {
+            preview.setText("");
+        }
     }
 
     private boolean lastCharIsOperator() {
@@ -247,101 +403,19 @@ public class CalculatorActivity extends AppCompatActivity {
         return "+−×÷^".indexOf(last) != -1;
     }
 
+    private boolean isOperator(String s) {
+        return s.equals("+") || s.equals("−") || s.equals("×") || s.equals("÷") || s.equals("^");
+    }
+
     private String formatNumber(double d) {
         if (Double.isInfinite(d) || Double.isNaN(d)) return "Error";
         if (d == (long) d) return String.valueOf((long) d);
         return df.format(d).replace(",", ".");
     }
 
-    public void onClearClick(View view) {
-        currentExpression = "0";
-        isResultDisplayed = false;
-        lastResult = "";
-        clearHistory();
-        updateDisplay();
-        preview.setText("");
-    }
-
-    public void onBackspaceClick(View view) {
-        if (isResultDisplayed) {
-            onClearClick(null);
-            return;
-        }
-        if (currentExpression.length() > 0) {
-            currentExpression = currentExpression.substring(0, currentExpression.length() - 1);
-            if (currentExpression.isEmpty()) currentExpression = "0";
-        }
-        updateDisplay();
-        evaluatePreview();
-    }
-
-    private void evaluatePreview() {
-        if (isResultDisplayed || currentExpression.isEmpty() || lastCharIsOperator()) {
-            preview.setText("");
-            return;
-        }
-        try {
-            double res = evaluateExpression(currentExpression);
-            preview.setText("= " + formatNumber(res));
-        } catch (Exception e) {
-            preview.setText("");
-        }
-    }
-
-    // --- History handling ---
-    private void addToHistory(String expr, String result) {
-        historyEntries.add(0, expr + " = " + result);
-        if (historyEntries.size() > 20) historyEntries.remove(historyEntries.size() - 1);
-        saveHistory();
-        updateHistoryUI();
-    }
-
-    private void clearHistory() {
-        historyEntries.clear();
-        saveHistory();
-        updateHistoryUI();
-    }
-
-    private void updateHistoryUI() {
-        historyContainer.removeAllViews();
-        TypedValue typedValue = new TypedValue();
-        getTheme().resolveAttribute(R.attr.calcHistoryTextColor, typedValue, true);
-        int color = typedValue.data;
-
-        for (String entry : historyEntries) {
-            TextView tv = new TextView(this);
-            tv.setText(entry);
-            tv.setTextColor(color);
-            tv.setTextSize(14);
-            tv.setPadding(0, 8, 0, 8);
-            tv.setGravity(android.view.Gravity.END);
-            historyContainer.addView(tv);
-        }
-        historyScroll.post(() -> historyScroll.fullScroll(View.FOCUS_UP));
-    }
-
-    private void loadHistory() {
-        SharedPreferences prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
-        try {
-            JSONArray arr = new JSONArray(prefs.getString(KEY_HISTORY, "[]"));
-            historyEntries.clear();
-            for (int i = 0; i < arr.length(); i++) historyEntries.add(arr.getString(i));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void saveHistory() {
-        SharedPreferences prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
-        JSONArray arr = new JSONArray(historyEntries);
-        prefs.edit().putString(KEY_HISTORY, arr.toString()).apply();
-    }
-
-    // --- Three‑dot menu (Theme & Password Reset) ---
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_calculator, menu);
-        // Optional: set sun/moon icon dynamically
         MenuItem themeItem = menu.findItem(R.id.action_theme);
         if (prefManager.isDarkMode()) {
             themeItem.setIcon(R.drawable.ic_moon);
@@ -360,7 +434,6 @@ public class CalculatorActivity extends AppCompatActivity {
             recreate();
             return true;
         } else if (id == R.id.action_settings) {
-            // Open password reset activity (three‑dot menu “Settings”)
             startActivity(new Intent(this, ResetPasswordActivity.class));
             return true;
         }

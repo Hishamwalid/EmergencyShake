@@ -1,16 +1,24 @@
 package com.example.silentemergency;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.provider.ContactsContract;
 import android.view.View;
 import android.widget.*;
-import androidx.appcompat.app.AlertDialog;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import com.example.silentemergency.service.EmergencyService;
 import com.example.silentemergency.utils.PrefManager;
 import java.util.ArrayList;
@@ -20,18 +28,26 @@ public class SettingsActivity extends AppCompatActivity {
 
     private PrefManager prefManager;
     private LinearLayout contactsContainer;
-    private Switch swDarkMode;
     private Button btnToggleProtection;
     private TextView tvTimer;
     private List<String> contacts = new ArrayList<>();
 
     private boolean isActive = false;
     private long startTime = 0;
-    private Handler timerHandler = new Handler();
+    private final Handler timerHandler = new Handler(Looper.getMainLooper());
     private Runnable timerRunnable;
 
-    private static final int PICK_CONTACT_REQUEST = 1;
     private int pendingEditIndex = -1;
+
+    private final ActivityResultLauncher<Intent> contactPickerLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    Uri contactUri = result.getData().getData();
+                    handleContactResult(contactUri);
+                }
+            }
+    );
 
     private static final String KEY_IS_PROTECTION_ACTIVE = "is_protection_active";
     private static final String KEY_PROTECTION_START_TIME = "protection_start_time";
@@ -44,29 +60,28 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
+        // Request notification permission for Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101);
+            }
+        }
+
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) getSupportActionBar().setTitle("Emergency Settings");
 
-        findViewById(R.id.btnShakeSettings).setOnClickListener(v -> {
-            startActivity(new Intent(this, ShakeConfigActivity.class));
-        });
+        findViewById(R.id.btnShakeSettings).setOnClickListener(v ->
+                startActivity(new Intent(this, ShakeConfigActivity.class)));
 
         contactsContainer = findViewById(R.id.contactsContainer);
-        swDarkMode = findViewById(R.id.swDarkMode);
         btnToggleProtection = findViewById(R.id.btnToggleProtection);
         tvTimer = findViewById(R.id.tvTimer);
         findViewById(R.id.btnAddContact).setOnClickListener(v -> openContactPickerForAdd());
 
         loadContacts();
 
-        swDarkMode.setChecked(prefManager.isDarkMode());
-        swDarkMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            prefManager.setDarkMode(isChecked);
-            recreate();
-        });
-
-        // Check if protection was active from saved flag
         isActive = prefManager.getPrefs().getBoolean(KEY_IS_PROTECTION_ACTIVE, false);
         if (isActive) {
             startTime = prefManager.getPrefs().getLong(KEY_PROTECTION_START_TIME, System.currentTimeMillis());
@@ -75,44 +90,52 @@ public class SettingsActivity extends AppCompatActivity {
             btnToggleProtection.setBackgroundResource(R.drawable.btn_monochrome_deactivate);
         } else {
             tvTimer.setText("Protection inactive");
+            btnToggleProtection.setText("Activate Protection");
+            btnToggleProtection.setBackgroundResource(R.drawable.btn_monochrome_primary);
         }
 
         btnToggleProtection.setOnClickListener(v -> {
-            if (isActive) {
-                stopProtection();
-            } else {
-                startProtection();
-            }
+            if (isActive) stopProtection();
+            else startProtection();
         });
     }
 
     private void startProtection() {
-        Intent intent = new Intent(this, EmergencyService.class);
-        startService(intent);
-        isActive = true;
-        startTime = System.currentTimeMillis();
-        prefManager.getPrefs().edit()
-                .putBoolean(KEY_IS_PROTECTION_ACTIVE, true)
-                .putLong(KEY_PROTECTION_START_TIME, startTime)
-                .apply();
-        startTimer();
-        btnToggleProtection.setText("Deactivate Protection");
-        btnToggleProtection.setBackgroundResource(R.drawable.btn_monochrome_deactivate);
-        Toast.makeText(this, "Protection activated", Toast.LENGTH_SHORT).show();
+        try {
+            Intent intent = new Intent(this, EmergencyService.class);
+            ContextCompat.startForegroundService(this, intent);
+            isActive = true;
+            startTime = System.currentTimeMillis();
+            prefManager.getPrefs().edit()
+                    .putBoolean(KEY_IS_PROTECTION_ACTIVE, true)
+                    .putLong(KEY_PROTECTION_START_TIME, startTime)
+                    .apply();
+            startTimer();
+            btnToggleProtection.setText("Deactivate Protection");
+            btnToggleProtection.setBackgroundResource(R.drawable.btn_monochrome_deactivate);
+            Toast.makeText(this, "Protection activated", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Failed to start protection", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void stopProtection() {
-        Intent intent = new Intent(this, EmergencyService.class);
-        stopService(intent);
-        isActive = false;
-        prefManager.getPrefs().edit().putBoolean(KEY_IS_PROTECTION_ACTIVE, false).apply();
-        if (timerHandler != null && timerRunnable != null) {
-            timerHandler.removeCallbacks(timerRunnable);
+        try {
+            // Stop the service directly – Android 16 is sensitive, but this is fine
+            Intent intent = new Intent(this, EmergencyService.class);
+            stopService(intent);
+            isActive = false;
+            prefManager.getPrefs().edit().putBoolean(KEY_IS_PROTECTION_ACTIVE, false).apply();
+            if (timerRunnable != null) timerHandler.removeCallbacks(timerRunnable);
+            tvTimer.setText("Protection inactive");
+            btnToggleProtection.setText("Activate Protection");
+            btnToggleProtection.setBackgroundResource(R.drawable.btn_monochrome_primary);
+            Toast.makeText(this, "Protection deactivated", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Error stopping protection", Toast.LENGTH_SHORT).show();
         }
-        tvTimer.setText("Protection inactive");
-        btnToggleProtection.setText("Activate Protection");
-        btnToggleProtection.setBackgroundResource(R.drawable.btn_monochrome_primary);
-        Toast.makeText(this, "Protection deactivated", Toast.LENGTH_SHORT).show();
     }
 
     private void startTimer() {
@@ -123,68 +146,87 @@ public class SettingsActivity extends AppCompatActivity {
                 long seconds = (elapsed / 1000) % 60;
                 long minutes = (elapsed / (1000 * 60)) % 60;
                 long hours = (elapsed / (1000 * 60 * 60));
-                String time = String.format("%02d:%02d:%02d", hours, minutes, seconds);
-                tvTimer.setText("Protection active for: " + time);
+                tvTimer.setText(String.format("Protection active for: %02d:%02d:%02d", hours, minutes, seconds));
                 timerHandler.postDelayed(this, 1000);
             }
         };
         timerHandler.post(timerRunnable);
     }
 
-    // --- Contact management with contact picker (unchanged) ---
+    // --- Contact picker helpers (unchanged, but included for completeness) ---
     private void openContactPickerForAdd() {
         if (contacts.size() >= 3) {
             Toast.makeText(this, "Maximum 3 contacts allowed", Toast.LENGTH_SHORT).show();
             return;
         }
+        if (!checkContactPermission()) return;
         pendingEditIndex = -1;
         Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
-        startActivityForResult(intent, PICK_CONTACT_REQUEST);
+        contactPickerLauncher.launch(intent);
     }
 
     private void openContactPickerForEdit(int index) {
+        if (!checkContactPermission()) return;
         pendingEditIndex = index;
         Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
-        startActivityForResult(intent, PICK_CONTACT_REQUEST);
+        contactPickerLauncher.launch(intent);
+    }
+
+    private boolean checkContactPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_CONTACTS}, 100);
+            return false;
+        }
+        return true;
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == PICK_CONTACT_REQUEST && resultCode == RESULT_OK && data != null) {
-            Uri contactUri = data.getData();
-            String phoneNumber = getPhoneNumberFromUri(contactUri);
-            if (phoneNumber != null && !phoneNumber.isEmpty()) {
-                if (pendingEditIndex == -1) {
-                    contacts.add(phoneNumber);
-                } else {
-                    contacts.set(pendingEditIndex, phoneNumber);
-                    pendingEditIndex = -1;
-                }
-                saveContacts();
-                refreshContactList();
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 100 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (pendingEditIndex == -1) openContactPickerForAdd();
+            else openContactPickerForEdit(pendingEditIndex);
+        } else if (requestCode == 101 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "Notification permission granted", Toast.LENGTH_SHORT).show();
+        } else if (requestCode == 101) {
+            Toast.makeText(this, "Notification permission denied. Service may not start.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void handleContactResult(Uri contactUri) {
+        String phoneNumber = getPhoneNumberFromUri(contactUri);
+        if (phoneNumber != null && !phoneNumber.isEmpty()) {
+            if (pendingEditIndex == -1) {
+                contacts.add(phoneNumber);
             } else {
-                Toast.makeText(this, "No phone number found for this contact", Toast.LENGTH_SHORT).show();
+                contacts.set(pendingEditIndex, phoneNumber);
+                pendingEditIndex = -1;
             }
+            saveContacts();
+            refreshContactList();
+        } else {
+            Toast.makeText(this, "No phone number found", Toast.LENGTH_SHORT).show();
         }
     }
 
     private String getPhoneNumberFromUri(Uri uri) {
         String phoneNumber = null;
-        Cursor cursor = getContentResolver().query(uri, null, null, null, null);
-        if (cursor != null && cursor.moveToFirst()) {
-            String contactId = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
-            Cursor phoneCursor = getContentResolver().query(
-                    ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                    null,
-                    ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
-                    new String[]{contactId},
-                    null);
-            if (phoneCursor != null && phoneCursor.moveToFirst()) {
-                phoneNumber = phoneCursor.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                phoneCursor.close();
+        try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                String contactId = cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.Contacts._ID));
+                try (Cursor phoneCursor = getContentResolver().query(
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        null,
+                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                        new String[]{contactId},
+                        null)) {
+                    if (phoneCursor != null && phoneCursor.moveToFirst()) {
+                        phoneNumber = phoneCursor.getString(phoneCursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                    }
+                }
             }
-            cursor.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         if (phoneNumber != null) {
             phoneNumber = phoneNumber.replaceAll("[\\s\\-()]", "");
