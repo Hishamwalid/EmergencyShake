@@ -31,7 +31,10 @@ public class SettingsActivity extends AppCompatActivity {
     private Runnable timerRunnable;
 
     private static final int PICK_CONTACT_REQUEST = 1;
-    private int pendingEditIndex = -1; // used when editing a contact
+    private int pendingEditIndex = -1;
+
+    private static final String KEY_IS_PROTECTION_ACTIVE = "is_protection_active";
+    private static final String KEY_PROTECTION_START_TIME = "protection_start_time";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,10 +66,10 @@ public class SettingsActivity extends AppCompatActivity {
             recreate();
         });
 
-        // Check if service is already running
-        isActive = isServiceRunning();
+        // Check if protection was active from saved flag
+        isActive = prefManager.getPrefs().getBoolean(KEY_IS_PROTECTION_ACTIVE, false);
         if (isActive) {
-            startTime = prefManager.getPrefs().getLong("protection_start_time", System.currentTimeMillis());
+            startTime = prefManager.getPrefs().getLong(KEY_PROTECTION_START_TIME, System.currentTimeMillis());
             startTimer();
             btnToggleProtection.setText("Deactivate Protection");
             btnToggleProtection.setBackgroundResource(R.drawable.btn_monochrome_deactivate);
@@ -83,22 +86,15 @@ public class SettingsActivity extends AppCompatActivity {
         });
     }
 
-    private boolean isServiceRunning() {
-        android.app.ActivityManager manager = (android.app.ActivityManager) getSystemService(ACTIVITY_SERVICE);
-        for (android.app.ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (EmergencyService.class.getName().equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private void startProtection() {
         Intent intent = new Intent(this, EmergencyService.class);
         startService(intent);
         isActive = true;
         startTime = System.currentTimeMillis();
-        prefManager.getPrefs().edit().putLong("protection_start_time", startTime).apply();
+        prefManager.getPrefs().edit()
+                .putBoolean(KEY_IS_PROTECTION_ACTIVE, true)
+                .putLong(KEY_PROTECTION_START_TIME, startTime)
+                .apply();
         startTimer();
         btnToggleProtection.setText("Deactivate Protection");
         btnToggleProtection.setBackgroundResource(R.drawable.btn_monochrome_deactivate);
@@ -109,6 +105,7 @@ public class SettingsActivity extends AppCompatActivity {
         Intent intent = new Intent(this, EmergencyService.class);
         stopService(intent);
         isActive = false;
+        prefManager.getPrefs().edit().putBoolean(KEY_IS_PROTECTION_ACTIVE, false).apply();
         if (timerHandler != null && timerRunnable != null) {
             timerHandler.removeCallbacks(timerRunnable);
         }
@@ -134,7 +131,7 @@ public class SettingsActivity extends AppCompatActivity {
         timerHandler.post(timerRunnable);
     }
 
-    // --- Contact management with contact picker ---
+    // --- Contact management with contact picker (unchanged) ---
     private void openContactPickerForAdd() {
         if (contacts.size() >= 3) {
             Toast.makeText(this, "Maximum 3 contacts allowed", Toast.LENGTH_SHORT).show();
@@ -159,10 +156,8 @@ public class SettingsActivity extends AppCompatActivity {
             String phoneNumber = getPhoneNumberFromUri(contactUri);
             if (phoneNumber != null && !phoneNumber.isEmpty()) {
                 if (pendingEditIndex == -1) {
-                    // Add new contact
                     contacts.add(phoneNumber);
                 } else {
-                    // Edit existing contact
                     contacts.set(pendingEditIndex, phoneNumber);
                     pendingEditIndex = -1;
                 }
@@ -191,14 +186,12 @@ public class SettingsActivity extends AppCompatActivity {
             }
             cursor.close();
         }
-        // Remove spaces, dashes, parentheses
         if (phoneNumber != null) {
             phoneNumber = phoneNumber.replaceAll("[\\s\\-()]", "");
         }
         return phoneNumber;
     }
 
-    // --- Contact list UI ---
     private void loadContacts() {
         contacts.clear();
         for (int i = 1; i <= 3; i++) {
