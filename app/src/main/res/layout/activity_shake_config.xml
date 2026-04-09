@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:background="?android:windowBackground">
+
+    <TextView
+        android:text="Shake Sensitivity"
+        android:textStyle="bold"
+        android:layout_marginTop="24dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="?android:textColorPrimary" />
+
+    <SeekBar
+        android:id="@+id/seekSensitivity"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:max="250"
+        android:progress="150" />
+
+    <TextView
+        android:id="@+id/tvSensitivityVal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="15.0"
+        android:gravity="center"
+        android:layout_marginBottom="32dp"
+        android:textColor="?android:textColorPrimary" />
+
+    <TextView
+        android:text="Number of Shakes Required"
+        android:textStyle="bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="?android:textColorPrimary" />
+
+    <SeekBar
+        android:id="@+id/seekShakeCount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:max="9"
+        android:progress="2" />
+
+    <TextView
+        android:id="@+id/tvShakeCountVal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="3"
+        android:gravity="center"
+        android:textColor="?android:textColorPrimary" />
+
+</LinearLayout>
