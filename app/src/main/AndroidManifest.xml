@@ -19,12 +19,12 @@
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher"
         android:theme="@style/AppTheme_Light"
         android:supportsRtl="true">
 
-        <!-- First-time setup -->
+        <!-- First‑time setup -->
         <activity
             android:name=".FirstTimeSetupActivity"
             android:exported="false"
@@ -41,28 +41,34 @@
             </intent-filter>
         </activity>
 
-        <!-- Password reset -->
+        <!-- Password reset (three‑dot menu) -->
         <activity
             android:name=".ResetPasswordActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <!-- Emergency settings -->
+        <!-- Hidden emergency settings (password + =) -->
         <activity
             android:name=".SettingsActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <!-- Future Services -->
-        <!--
+        <!-- Shake configuration (gear icon inside emergency settings) -->
+        <activity
+            android:name=".ShakeConfigActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Foreground service for shake detection -->
         <service
             android:name=".service.EmergencyService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+
+        <!-- Short‑lived service that handles the emergency alert (SMS/call) -->
         <service
             android:name=".EmergencyHandler"
             android:exported="false" />
-        -->
 
     </application>
 </manifest>
