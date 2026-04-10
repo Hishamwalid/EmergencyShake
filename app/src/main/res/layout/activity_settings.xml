@@ -59,13 +59,59 @@
                 android:background="@drawable/btn_monochrome_primary"
                 android:textAllCaps="false" />
 
-            <!-- Round toggle button -->
+            <!-- Starting point button and display -->
+            <Button
+                android:id="@+id/btnSetCurrentLocation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/btnAddContact"
+                android:layout_marginTop="10dp"
+                android:text="Set Current Location as Starting Point"
+                android:textColor="#000000"
+                android:background="@drawable/btn_monochrome_primary"
+                android:textAllCaps="false" />
+
+            <TextView
+                android:id="@+id/tvStartingPoint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/btnSetCurrentLocation"
+                android:layout_marginTop="4dp"
+                android:text="Starting point: not set"
+                android:textSize="14sp"
+                android:textColor="?android:textColorPrimary"
+                android:paddingStart="8dp" />
+
+            <!-- Destination button and display -->
+            <Button
+                android:id="@+id/btnSetDestination"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/tvStartingPoint"
+                android:layout_marginTop="10dp"
+                android:text="Set Destination"
+                android:textColor="#000000"
+                android:background="@drawable/btn_monochrome_primary"
+                android:textAllCaps="false" />
+
+            <TextView
+                android:id="@+id/tvDestination"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/btnSetDestination"
+                android:layout_marginTop="4dp"
+                android:text="Destination: not set"
+                android:textSize="14sp"
+                android:textColor="?android:textColorPrimary"
+                android:paddingStart="8dp" />
+
+            <!-- Round toggle button container -->
             <LinearLayout
                 android:id="@+id/buttonContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/btnAddContact"
-                android:layout_marginTop="60dp"
+                android:layout_below="@id/tvDestination"
+                android:layout_marginTop="40dp"
                 android:layout_marginBottom="40dp"
                 android:gravity="center"
                 android:orientation="vertical">
