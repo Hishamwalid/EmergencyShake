@@ -20,7 +20,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import com.example.silentemergency.utils.PrefManager;
+import com.example.silentemergency.utils.PrefManager;   // ✅ THIS IS THE IMPORT
 import org.json.JSONArray;
 import org.json.JSONException;
 import java.text.DecimalFormat;
@@ -52,7 +52,6 @@ public class CalculatorActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calculator);
 
-        // Request all permissions at app start
         requestAllPermissions();
 
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -69,7 +68,6 @@ public class CalculatorActivity extends AppCompatActivity {
             return false;
         });
 
-        // If no password stored, go to first‑time setup
         if (prefManager.getPassword().isEmpty()) {
             startActivity(new Intent(this, FirstTimeSetupActivity.class));
             finish();
@@ -79,9 +77,9 @@ public class CalculatorActivity extends AppCompatActivity {
         loadHistory();
         updateDisplay();
         updateHistoryUI();
+        scrollHistoryToBottom();
     }
 
-    // ---------- Request all permissions at once ----------
     private void requestAllPermissions() {
         String[] permissions = {
                 Manifest.permission.SEND_SMS,
@@ -125,11 +123,11 @@ public class CalculatorActivity extends AppCompatActivity {
     }
 
     private void addToHistory(String expr, String result) {
-        historyEntries.add(0, expr + " = " + result);
-        if (historyEntries.size() > 20) historyEntries.remove(historyEntries.size() - 1);
+        historyEntries.add(expr + " = " + result);
+        if (historyEntries.size() > 20) historyEntries.remove(0);
         saveHistory();
         updateHistoryUI();
-        scrollHistoryToTop();
+        scrollHistoryToBottom();
     }
 
     private void clearHistory() {
@@ -154,13 +152,13 @@ public class CalculatorActivity extends AppCompatActivity {
             historyContainer.addView(tv);
         }
         if (historyScroll != null) {
-            historyScroll.post(() -> historyScroll.fullScroll(View.FOCUS_UP));
+            historyScroll.post(() -> historyScroll.fullScroll(View.FOCUS_DOWN));
         }
     }
 
-    private void scrollHistoryToTop() {
+    private void scrollHistoryToBottom() {
         if (historyScroll != null) {
-            historyScroll.post(() -> historyScroll.fullScroll(View.FOCUS_UP));
+            historyScroll.post(() -> historyScroll.fullScroll(View.FOCUS_DOWN));
         }
     }
 
