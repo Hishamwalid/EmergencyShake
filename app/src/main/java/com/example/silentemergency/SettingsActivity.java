@@ -4,13 +4,17 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.ContactsContract;
-import android.text.InputType;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.*;
 import androidx.activity.result.ActivityResultLauncher;
@@ -23,16 +27,18 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import com.example.silentemergency.service.EmergencyService;
 import com.example.silentemergency.utils.PrefManager;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class SettingsActivity extends AppCompatActivity {
 
     private PrefManager prefManager;
     private LinearLayout contactsContainer;
     private Button btnToggleProtection;
-    private TextView tvTimer;
-    private List<String> contacts = new ArrayList<>(); // stores "Name:Number"
+    private TextView tvTimer, tvStartingPoint, tvDestination;
+    private List<String> contacts = new ArrayList<>();
 
     private boolean isActive = false;
     private long startTime = 0;
@@ -43,6 +49,9 @@ public class SettingsActivity extends AppCompatActivity {
 
     private static final int COLOR_RED = 0xFFFF4444;
     private static final int COLOR_GREEN = 0xFF4CAF50;
+
+    private static final int REQUEST_CURRENT_LOCATION = 200;
+    private static final int REQUEST_DESTINATION = 201;
 
     private final ActivityResultLauncher<Intent> contactPickerLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -83,9 +92,15 @@ public class SettingsActivity extends AppCompatActivity {
         contactsContainer = findViewById(R.id.contactsContainer);
         btnToggleProtection = findViewById(R.id.btnToggleProtection);
         tvTimer = findViewById(R.id.tvTimer);
+        tvStartingPoint = findViewById(R.id.tvStartingPoint);
+        tvDestination = findViewById(R.id.tvDestination);
         findViewById(R.id.btnAddContact).setOnClickListener(v -> showAddContactOptions());
+        findViewById(R.id.btnSetCurrentLocation).setOnClickListener(v -> getCurrentLocation());
+        findViewById(R.id.btnSetDestination).setOnClickListener(v -> openGoogleMapsForDestination());
 
         loadContacts();
+        updateStartingPointDisplay();
+        updateDestinationDisplay();
 
         // Restore protection state
         isActive = prefManager.getPrefs().getBoolean(KEY_IS_PROTECTION_ACTIVE, false);
@@ -162,6 +177,104 @@ public class SettingsActivity extends AppCompatActivity {
         timerHandler.post(timerRunnable);
     }
 
+    // --- Starting point & destination helpers ---
+    private void updateStartingPointDisplay() {
+        String start = prefManager.getStartingPoint();
+        if (start.isEmpty()) {
+            tvStartingPoint.setText("Starting point: not set");
+        } else {
+            tvStartingPoint.setText("Starting point: " + start);
+        }
+    }
+
+    private void updateDestinationDisplay() {
+        String dest = prefManager.getDestination();
+        if (dest.isEmpty()) {
+            tvDestination.setText("Destination: not set");
+        } else {
+            tvDestination.setText("Destination: " + dest);
+        }
+    }
+
+    private void getCurrentLocation() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CURRENT_LOCATION);
+            return;
+        }
+        LocationManager lm = (LocationManager) getSystemService(LOCATION_SERVICE);
+        Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if (location == null) {
+            location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        }
+        if (location == null) {
+            Toast.makeText(this, "Unable to get current location. Please enable GPS.", Toast.LENGTH_LONG).show();
+            return;
+        }
+        double lat = location.getLatitude();
+        double lon = location.getLongitude();
+        String address = getAddressFromLatLng(lat, lon);
+        if (address != null) {
+            prefManager.setStartingPoint(address);
+            updateStartingPointDisplay();
+            Toast.makeText(this, "Starting point saved", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Could not get address. Saved coordinates.", Toast.LENGTH_SHORT).show();
+            prefManager.setStartingPoint(lat + "," + lon);
+            updateStartingPointDisplay();
+        }
+    }
+
+    private void openGoogleMapsForDestination() {
+        Uri geoUri = Uri.parse("geo:0,0?q=");
+        Intent mapIntent = new Intent(Intent.ACTION_VIEW, geoUri);
+        startActivityForResult(mapIntent, REQUEST_DESTINATION);
+    }
+
+    private String getAddressFromLatLng(double lat, double lng) {
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+        try {
+            List<Address> addresses = geocoder.getFromLocation(lat, lng, 1);
+            if (addresses != null && !addresses.isEmpty()) {
+                Address addr = addresses.get(0);
+                String addressLine = addr.getAddressLine(0);
+                if (!TextUtils.isEmpty(addressLine)) {
+                    return addressLine;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_DESTINATION && resultCode == RESULT_OK && data != null) {
+            String uriString = data.getDataString();
+            if (uriString != null && uriString.startsWith("geo:")) {
+                String[] parts = uriString.substring(4).split("\\?");
+                String latLng = parts[0];
+                String[] coords = latLng.split(",");
+                if (coords.length >= 2) {
+                    double lat = Double.parseDouble(coords[0]);
+                    double lng = Double.parseDouble(coords[1]);
+                    String address = getAddressFromLatLng(lat, lng);
+                    if (address != null) {
+                        prefManager.setDestination(address);
+                        updateDestinationDisplay();
+                        Toast.makeText(this, "Destination saved", Toast.LENGTH_SHORT).show();
+                    } else {
+                        prefManager.setDestination(lat + "," + lng);
+                        updateDestinationDisplay();
+                        Toast.makeText(this, "Destination coordinates saved", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        }
+    }
+
     // --- Contact management (unchanged) ---
     private void showAddContactOptions() {
         if (contacts.size() >= 3) {
@@ -196,7 +309,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         final EditText inputNumber = new EditText(this);
         inputNumber.setHint("Phone Number");
-        inputNumber.setInputType(InputType.TYPE_CLASS_PHONE);
+        inputNumber.setInputType(android.text.InputType.TYPE_CLASS_PHONE);
         layout.addView(inputNumber);
 
         new AlertDialog.Builder(this)
@@ -264,7 +377,7 @@ public class SettingsActivity extends AppCompatActivity {
         final EditText inputNumber = new EditText(this);
         inputNumber.setText(oldNumber);
         inputNumber.setHint("Phone Number");
-        inputNumber.setInputType(InputType.TYPE_CLASS_PHONE);
+        inputNumber.setInputType(android.text.InputType.TYPE_CLASS_PHONE);
         layout.addView(inputNumber);
 
         new AlertDialog.Builder(this)
@@ -303,6 +416,8 @@ public class SettingsActivity extends AppCompatActivity {
             Toast.makeText(this, "Notification permission granted", Toast.LENGTH_SHORT).show();
         } else if (requestCode == 101) {
             Toast.makeText(this, "Notification permission denied. Service may not start.", Toast.LENGTH_SHORT).show();
+        } else if (requestCode == REQUEST_CURRENT_LOCATION && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            getCurrentLocation();
         }
     }
 
