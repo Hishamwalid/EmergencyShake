@@ -44,6 +44,6 @@ dependencies {
     implementation("org.osmdroid:osmdroid-mapsforge:6.1.18")
     // For HTTP requests to Nominatim (geocoding)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
-
+    implementation("com.google.android.material:material:1.11.0")
 
 }

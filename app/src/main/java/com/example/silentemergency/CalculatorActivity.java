@@ -20,7 +20,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import com.example.silentemergency.utils.PrefManager;   // ✅ THIS IS THE IMPORT
+import com.example.silentemergency.utils.PrefManager;
 import org.json.JSONArray;
 import org.json.JSONException;
 import java.text.DecimalFormat;
