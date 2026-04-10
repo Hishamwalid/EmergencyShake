@@ -12,10 +12,10 @@ public class PrefManager {
     private static final String KEY_SHAKE_SENSITIVITY = "shakeSensitivity";
     private static final String KEY_SHAKE_COUNT = "shakeCount";
     private static final String KEY_DARK_MODE = "darkMode";
-    // Legacy single contact (keep for compatibility, but use slot methods)
     private static final String KEY_EMERGENCY_NUMBER = "emergencyNumber";
-    // SMS-only preference (no phone call)
     private static final String KEY_SMS_ONLY = "sms_only";
+    private static final String KEY_STARTING_POINT = "starting_point";
+    private static final String KEY_DESTINATION = "destination";
 
     private SharedPreferences prefs;
     private SharedPreferences.Editor editor;
@@ -25,16 +25,12 @@ public class PrefManager {
         editor = prefs.edit();
     }
 
-    // Direct access to SharedPreferences (for history persistence)
-    public SharedPreferences getPrefs() {
-        return prefs;
-    }
+    public SharedPreferences getPrefs() { return prefs; }
 
     // ---------- First time ----------
     public boolean isFirstTime() {
         return prefs.getBoolean(KEY_IS_FIRST_TIME, true);
     }
-
     public void setFirstTime(boolean isFirst) {
         editor.putBoolean(KEY_IS_FIRST_TIME, isFirst);
         editor.apply();
@@ -45,7 +41,6 @@ public class PrefManager {
         editor.putString(KEY_PASSWORD, password);
         editor.apply();
     }
-
     public String getPassword() {
         return prefs.getString(KEY_PASSWORD, "");
     }
@@ -55,16 +50,13 @@ public class PrefManager {
         editor.putString(KEY_SECURITY_QUESTION, question);
         editor.apply();
     }
-
     public String getSecurityQuestion() {
         return prefs.getString(KEY_SECURITY_QUESTION, "");
     }
-
     public void setSecurityAnswer(String answer) {
         editor.putString(KEY_SECURITY_ANSWER, answer.toLowerCase());
         editor.apply();
     }
-
     public boolean checkSecurityAnswer(String answer) {
         return prefs.getString(KEY_SECURITY_ANSWER, "").equals(answer.toLowerCase());
     }
@@ -73,16 +65,13 @@ public class PrefManager {
     public float getShakeSensitivity() {
         return prefs.getFloat(KEY_SHAKE_SENSITIVITY, 15.0f);
     }
-
     public void setShakeSensitivity(float value) {
         editor.putFloat(KEY_SHAKE_SENSITIVITY, value);
         editor.apply();
     }
-
     public int getShakeCount() {
         return prefs.getInt(KEY_SHAKE_COUNT, 3);
     }
-
     public void setShakeCount(int count) {
         editor.putInt(KEY_SHAKE_COUNT, count);
         editor.apply();
@@ -93,7 +82,6 @@ public class PrefManager {
         editor.putBoolean(KEY_DARK_MODE, isDark);
         editor.apply();
     }
-
     public boolean isDarkMode() {
         return prefs.getBoolean(KEY_DARK_MODE, false);
     }
@@ -103,28 +91,40 @@ public class PrefManager {
         editor.putString("emergency_number_" + slot, number);
         editor.apply();
     }
-
     public String getEmergencyNumber(int slot) {
         return prefs.getString("emergency_number_" + slot, "");
     }
-
-    // Legacy single contact (used by old code – keep for compatibility)
+    // Legacy single contact
     public void setEmergencyNumber(String number) {
         editor.putString(KEY_EMERGENCY_NUMBER, number);
         editor.apply();
     }
-
     public String getEmergencyNumber() {
         return prefs.getString(KEY_EMERGENCY_NUMBER, "");
     }
 
-    // ---------- SMS only (no phone call) ----------
+    // ---------- SMS only ----------
     public void setSmsOnly(boolean smsOnly) {
         editor.putBoolean(KEY_SMS_ONLY, smsOnly);
         editor.apply();
     }
-
     public boolean isSmsOnly() {
         return prefs.getBoolean(KEY_SMS_ONLY, false);
+    }
+
+    // ---------- Starting point & destination ----------
+    public void setStartingPoint(String address) {
+        editor.putString(KEY_STARTING_POINT, address);
+        editor.apply();
+    }
+    public String getStartingPoint() {
+        return prefs.getString(KEY_STARTING_POINT, "");
+    }
+    public void setDestination(String address) {
+        editor.putString(KEY_DESTINATION, address);
+        editor.apply();
+    }
+    public String getDestination() {
+        return prefs.getString(KEY_DESTINATION, "");
     }
 }
