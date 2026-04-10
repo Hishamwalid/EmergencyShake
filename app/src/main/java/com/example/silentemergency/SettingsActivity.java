@@ -17,7 +17,6 @@ import android.provider.ContactsContract;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.*;
-
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -26,13 +25,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
 import com.example.silentemergency.service.EmergencyService;
 import com.example.silentemergency.utils.PrefManager;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -316,7 +312,7 @@ public class SettingsActivity extends AppCompatActivity {
         return null;
     }
 
-    // --- CONTACT SECTION ---
+    // --- CONTACT SECTION with duplicate prevention ---
 
     private void showAddContactOptions() {
         if (contacts.size() >= 3) {
@@ -363,6 +359,11 @@ public class SettingsActivity extends AppCompatActivity {
                     String phone = inputNumber.getText().toString().trim();
 
                     if (!phone.isEmpty()) {
+                        // Check duplicate before adding
+                        if (isPhoneNumberDuplicate(phone)) {
+                            Toast.makeText(this, "This phone number is already in your emergency contacts", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
                         contacts.add((name.isEmpty() ? "Emergency" : name) + ":" + phone);
                         saveContacts();
                         refreshContactList();
@@ -399,7 +400,13 @@ public class SettingsActivity extends AppCompatActivity {
                 if (p != null && p.moveToFirst()) {
                     String num = p.getString(p.getColumnIndexOrThrow(
                             ContactsContract.CommonDataKinds.Phone.NUMBER));
-                    contacts.add(name + ":" + num);
+                    // Remove spaces, dashes, parentheses
+                    String cleanNumber = num.replaceAll("[\\s\\-()]", "");
+                    if (isPhoneNumberDuplicate(cleanNumber)) {
+                        Toast.makeText(this, "This phone number is already in your emergency contacts", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    contacts.add(name + ":" + cleanNumber);
                     saveContacts();
                     refreshContactList();
                 }
@@ -407,6 +414,18 @@ public class SettingsActivity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    // Helper to check duplicate phone number
+    private boolean isPhoneNumberDuplicate(String phoneNumber) {
+        for (String contact : contacts) {
+            String[] parts = contact.split(":");
+            String existingNumber = parts.length > 1 ? parts[1] : parts[0];
+            if (existingNumber.equals(phoneNumber)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void loadContacts() {
