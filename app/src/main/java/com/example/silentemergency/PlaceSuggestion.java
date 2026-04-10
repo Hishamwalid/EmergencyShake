@@ -6,14 +6,14 @@ public class PlaceSuggestion {
     public double lat;
     public double lon;
 
-    public PlaceSuggestion(String name,double lat,double lon){
-        this.name=name;
-        this.lat=lat;
-        this.lon=lon;
+    public PlaceSuggestion(String name, double lat, double lon) {
+        this.name = name;
+        this.lat = lat;
+        this.lon = lon;
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return name;
     }
 }
