@@ -13,6 +13,8 @@
         <item name="calcButtonTextColor">#FFFFFF</item>
         <item name="calcHistoryTextColor">#AAAAAA</item>
         <item name="calcHistoryBackground">#2A2A2A</item>
+        <item name="colorControlNormal">?android:textColorPrimary</item>
+        <item name="colorControlActivated">?android:textColorPrimary</item>
     </style>
 
     <!-- Light theme -->
@@ -27,6 +29,8 @@
         <item name="calcButtonTextColor">#000000</item>
         <item name="calcHistoryTextColor">#666666</item>
         <item name="calcHistoryBackground">#E0E0E0</item>
+        <item name="colorControlNormal">?android:textColorPrimary</item>
+        <item name="colorControlActivated">?android:textColorPrimary</item>
     </style>
 
 </resources>
