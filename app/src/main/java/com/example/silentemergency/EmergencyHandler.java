@@ -15,6 +15,7 @@ public class EmergencyHandler extends Service {
         String startingPoint = pref.getStartingPoint();
         String destination = pref.getDestination();
         boolean anyContact = false;
+        int sentCount = 0;
 
         for (int i = 1; i <= 3; i++) {
             String contact = pref.getEmergencyNumber(i);
@@ -31,15 +32,23 @@ public class EmergencyHandler extends Service {
                 } else if (!destination.isEmpty()) {
                     customPrefix.append("I was heading to ").append(destination).append(". ");
                 }
-                // The LocationHelper will add the emergency location link
+
                 new LocationHelper(this).sendLocationAndAlert(phoneNumber, smsOnly, customPrefix.toString());
+                sentCount++;
             }
         }
-        if (!anyContact) {
+
+        if (anyContact) {
+            String action = smsOnly ? "SMS" : "SMS and call";
+            Toast.makeText(this, "Emergency alert sent to " + sentCount + " contact(s) (" + action + ")", Toast.LENGTH_LONG).show();
+        } else {
             Toast.makeText(this, "No emergency contacts set", Toast.LENGTH_SHORT).show();
         }
         return START_NOT_STICKY;
     }
+
     @Override
-    public IBinder onBind(Intent intent) { return null; }
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
 }

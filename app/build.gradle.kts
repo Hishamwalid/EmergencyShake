@@ -39,4 +39,11 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    // OSMDroid for OpenStreetMap map display
+    implementation("org.osmdroid:osmdroid-android:6.1.18")
+    implementation("org.osmdroid:osmdroid-mapsforge:6.1.18")
+    // For HTTP requests to Nominatim (geocoding)
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+
 }

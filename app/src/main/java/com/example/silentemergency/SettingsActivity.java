@@ -51,7 +51,6 @@ public class SettingsActivity extends AppCompatActivity {
     private static final int COLOR_GREEN = 0xFF4CAF50;
 
     private static final int REQUEST_CURRENT_LOCATION = 200;
-    private static final int REQUEST_DESTINATION = 201;
 
     private final ActivityResultLauncher<Intent> contactPickerLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -96,7 +95,7 @@ public class SettingsActivity extends AppCompatActivity {
         tvDestination = findViewById(R.id.tvDestination);
         findViewById(R.id.btnAddContact).setOnClickListener(v -> showAddContactOptions());
         findViewById(R.id.btnSetCurrentLocation).setOnClickListener(v -> getCurrentLocation());
-        findViewById(R.id.btnSetDestination).setOnClickListener(v -> openGoogleMapsForDestination());
+        findViewById(R.id.btnSetDestination).setOnClickListener(v -> openDestinationDialog());
 
         loadContacts();
         updateStartingPointDisplay();
@@ -225,10 +224,27 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
-    private void openGoogleMapsForDestination() {
-        Uri geoUri = Uri.parse("geo:0,0?q=");
-        Intent mapIntent = new Intent(Intent.ACTION_VIEW, geoUri);
-        startActivityForResult(mapIntent, REQUEST_DESTINATION);
+    private void openDestinationDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Set Destination");
+
+        final EditText input = new EditText(this);
+        input.setHint("Enter destination address");
+        input.setInputType(android.text.InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+        builder.setPositiveButton("Save", (dialog, which) -> {
+            String address = input.getText().toString().trim();
+            if (!address.isEmpty()) {
+                prefManager.setDestination(address);
+                updateDestinationDisplay();
+                Toast.makeText(this, "Destination saved", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Destination not saved (empty)", Toast.LENGTH_SHORT).show();
+            }
+        });
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
     }
 
     private String getAddressFromLatLng(double lat, double lng) {
@@ -249,29 +265,17 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_DESTINATION && resultCode == RESULT_OK && data != null) {
-            String uriString = data.getDataString();
-            if (uriString != null && uriString.startsWith("geo:")) {
-                String[] parts = uriString.substring(4).split("\\?");
-                String latLng = parts[0];
-                String[] coords = latLng.split(",");
-                if (coords.length >= 2) {
-                    double lat = Double.parseDouble(coords[0]);
-                    double lng = Double.parseDouble(coords[1]);
-                    String address = getAddressFromLatLng(lat, lng);
-                    if (address != null) {
-                        prefManager.setDestination(address);
-                        updateDestinationDisplay();
-                        Toast.makeText(this, "Destination saved", Toast.LENGTH_SHORT).show();
-                    } else {
-                        prefManager.setDestination(lat + "," + lng);
-                        updateDestinationDisplay();
-                        Toast.makeText(this, "Destination coordinates saved", Toast.LENGTH_SHORT).show();
-                    }
-                }
-            }
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 100 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (pendingEditIndex == -1) openContactPicker();
+            else editContactAtIndex(pendingEditIndex);
+        } else if (requestCode == 101 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "Notification permission granted", Toast.LENGTH_SHORT).show();
+        } else if (requestCode == 101) {
+            Toast.makeText(this, "Notification permission denied. Service may not start.", Toast.LENGTH_SHORT).show();
+        } else if (requestCode == REQUEST_CURRENT_LOCATION && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            getCurrentLocation();
         }
     }
 
@@ -404,21 +408,6 @@ public class SettingsActivity extends AppCompatActivity {
             return false;
         }
         return true;
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 100 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            if (pendingEditIndex == -1) openContactPicker();
-            else editContactAtIndex(pendingEditIndex);
-        } else if (requestCode == 101 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(this, "Notification permission granted", Toast.LENGTH_SHORT).show();
-        } else if (requestCode == 101) {
-            Toast.makeText(this, "Notification permission denied. Service may not start.", Toast.LENGTH_SHORT).show();
-        } else if (requestCode == REQUEST_CURRENT_LOCATION && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            getCurrentLocation();
-        }
     }
 
     private void loadContacts() {
