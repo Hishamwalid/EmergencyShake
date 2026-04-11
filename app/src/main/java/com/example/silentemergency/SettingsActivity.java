@@ -160,8 +160,8 @@ public class SettingsActivity extends AppCompatActivity {
 
         // Load saved values
         loadShakeSettings();
-        loadPowerShakeSettings();
-        loadPowerPressSettings();
+        loadPowerPressSettings();  // ✅ This method exists
+        // ❌ Removed: loadPowerShakeSettings(); (not needed – power+shake uses same values)
 
         // Listeners for checkboxes
         cbShakeOnly.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -197,6 +197,9 @@ public class SettingsActivity extends AppCompatActivity {
                 if (val < 5.0f) val = 5.0f;
                 tvShakeSensitivityVal.setText(String.format("%.1f", val));
                 prefManager.setShakeSensitivity(val);
+                // Also update power+shake SeekBars to keep them in sync
+                seekPowerShakeSensitivity.setProgress(progress);
+                tvPowerShakeSensitivityVal.setText(String.format("%.1f", val));
             }
             @Override public void onStartTrackingTouch(SeekBar seekBar) {}
             @Override public void onStopTrackingTouch(SeekBar seekBar) {}
@@ -207,20 +210,23 @@ public class SettingsActivity extends AppCompatActivity {
                 int val = progress + 1;
                 tvShakeCountVal.setText(String.valueOf(val));
                 prefManager.setShakeCount(val);
+                seekPowerShakeCount.setProgress(progress);
+                tvPowerShakeCountVal.setText(String.valueOf(val));
             }
             @Override public void onStartTrackingTouch(SeekBar seekBar) {}
             @Override public void onStopTrackingTouch(SeekBar seekBar) {}
         });
 
-        // For power+shake, we reuse the same sensitivity and count values for simplicity
+        // Power+Shake SeekBars – they mirror the shake settings, but we still need to update them when user directly interacts
         seekPowerShakeSensitivity.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 float val = progress / 10.0f;
                 if (val < 5.0f) val = 5.0f;
                 tvPowerShakeSensitivityVal.setText(String.format("%.1f", val));
-                // Optionally store separate values; here we reuse same as shake
                 prefManager.setShakeSensitivity(val);
+                seekShakeSensitivity.setProgress(progress);
+                tvShakeSensitivityVal.setText(String.format("%.1f", val));
             }
             @Override public void onStartTrackingTouch(SeekBar seekBar) {}
             @Override public void onStopTrackingTouch(SeekBar seekBar) {}
@@ -231,6 +237,8 @@ public class SettingsActivity extends AppCompatActivity {
                 int val = progress + 1;
                 tvPowerShakeCountVal.setText(String.valueOf(val));
                 prefManager.setShakeCount(val);
+                seekShakeCount.setProgress(progress);
+                tvShakeCountVal.setText(String.valueOf(val));
             }
             @Override public void onStartTrackingTouch(SeekBar seekBar) {}
             @Override public void onStopTrackingTouch(SeekBar seekBar) {}
@@ -289,7 +297,7 @@ public class SettingsActivity extends AppCompatActivity {
         seekShakeCount.setProgress(count - 1);
         tvShakeSensitivityVal.setText(String.format("%.1f", sens));
         tvShakeCountVal.setText(String.valueOf(count));
-        // Also update power+shake SeekBars to same values
+        // Sync power+shake SeekBars
         seekPowerShakeSensitivity.setProgress((int)(sens * 10));
         seekPowerShakeCount.setProgress(count - 1);
         tvPowerShakeSensitivityVal.setText(String.format("%.1f", sens));
@@ -445,7 +453,7 @@ public class SettingsActivity extends AppCompatActivity {
         return null;
     }
 
-    // --- CONTACT SECTION with duplicate prevention (unchanged) ---
+    // --- CONTACT SECTION with duplicate prevention ---
     private void showAddContactOptions() {
         if (contacts.size() >= 3) {
             Toast.makeText(this, "Max 3 contacts", Toast.LENGTH_SHORT).show();
