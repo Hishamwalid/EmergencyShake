@@ -34,7 +34,7 @@
             android:layout_height="wrap_content"
             android:padding="20dp">
 
-            <!-- Emergency Contacts section (unchanged) -->
+            <!-- Emergency Contacts -->
             <TextView
                 android:id="@+id/labelContacts"
                 android:layout_width="wrap_content"
@@ -60,7 +60,7 @@
                 android:background="@drawable/btn_monochrome_primary"
                 android:textAllCaps="false" />
 
-            <!-- Starting point (unchanged) -->
+            <!-- Starting point -->
             <Button
                 android:id="@+id/btnSetCurrentLocation"
                 android:layout_width="match_parent"
@@ -81,7 +81,7 @@
                 android:textColor="?android:textColorPrimary"
                 android:paddingStart="8dp" />
 
-            <!-- Destination (unchanged) -->
+            <!-- Destination -->
             <Button
                 android:id="@+id/btnSetDestination"
                 android:layout_width="match_parent"
@@ -102,236 +102,26 @@
                 android:textColor="?android:textColorPrimary"
                 android:paddingStart="8dp" />
 
-            <!-- NEW: Gesture Options section -->
-            <TextView
-                android:layout_width="wrap_content"
+            <!-- Big round Activate/Deactivate button -->
+            <FrameLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Trigger Options"
-                android:textStyle="bold"
                 android:layout_marginTop="32dp"
-                android:textColor="?android:textColorPrimary" />
+                android:layout_marginBottom="16dp">
 
-            <!-- Option 1: Shake Detection -->
-            <CheckBox
-                android:id="@+id/cbShakeOnly"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Shake Detection"
-                android:layout_marginTop="16dp"
-                android:buttonTint="?android:textColorPrimary"
-                android:textColor="?android:textColorPrimary" />
-
-            <LinearLayout
-                android:id="@+id/layoutShakeOnly"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="gone"
-                android:layout_marginStart="32dp">
-
-                <TextView
-                    android:text="Shake Sensitivity"
+                <Button
+                    android:id="@+id/btnToggleProtection"
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:layout_gravity="center"
+                    android:text="ACTIVATE"
+                    android:textSize="18sp"
                     android:textStyle="bold"
-                    android:layout_marginTop="12dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="?android:textColorPrimary" />
-
-                <SeekBar
-                    android:id="@+id/seekShakeSensitivity"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:max="250"
-                    android:progress="150"
-                    android:progressTint="?attr/calcButtonBackground"
-                    android:thumbTint="?attr/calcButtonBackground" />
-
-                <TextView
-                    android:id="@+id/tvShakeSensitivityVal"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="15.0"
+                    android:background="@drawable/btn_round_primary"
+                    android:textColor="#FFFFFF"
                     android:gravity="center"
-                    android:layout_marginBottom="8dp"
-                    android:textColor="?android:textColorPrimary" />
-
-                <TextView
-                    android:text="Number of Shakes Required"
-                    android:textStyle="bold"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="?android:textColorPrimary" />
-
-                <SeekBar
-                    android:id="@+id/seekShakeCount"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:max="9"
-                    android:progress="2"
-                    android:progressTint="?attr/calcButtonBackground"
-                    android:thumbTint="?attr/calcButtonBackground" />
-
-                <TextView
-                    android:id="@+id/tvShakeCountVal"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="3"
-                    android:gravity="center"
-                    android:textColor="?android:textColorPrimary" />
-            </LinearLayout>
-
-            <!-- Option 2: Power Button + Shake -->
-            <CheckBox
-                android:id="@+id/cbPowerAndShake"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Power Button + Shake"
-                android:layout_marginTop="16dp"
-                android:buttonTint="?android:textColorPrimary"
-                android:textColor="?android:textColorPrimary" />
-
-            <LinearLayout
-                android:id="@+id/layoutPowerAndShake"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="gone"
-                android:layout_marginStart="32dp">
-
-                <!-- Same SeekBars as above – reuse same IDs? We'll use separate IDs for clarity -->
-                <TextView
-                    android:text="Shake Sensitivity"
-                    android:textStyle="bold"
-                    android:layout_marginTop="12dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="?android:textColorPrimary" />
-
-                <SeekBar
-                    android:id="@+id/seekPowerShakeSensitivity"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:max="250"
-                    android:progress="150"
-                    android:progressTint="?attr/calcButtonBackground"
-                    android:thumbTint="?attr/calcButtonBackground" />
-
-                <TextView
-                    android:id="@+id/tvPowerShakeSensitivityVal"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="15.0"
-                    android:gravity="center"
-                    android:layout_marginBottom="8dp"
-                    android:textColor="?android:textColorPrimary" />
-
-                <TextView
-                    android:text="Number of Shakes Required"
-                    android:textStyle="bold"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="?android:textColorPrimary" />
-
-                <SeekBar
-                    android:id="@+id/seekPowerShakeCount"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:max="9"
-                    android:progress="2"
-                    android:progressTint="?attr/calcButtonBackground"
-                    android:thumbTint="?attr/calcButtonBackground" />
-
-                <TextView
-                    android:id="@+id/tvPowerShakeCountVal"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="3"
-                    android:gravity="center"
-                    android:textColor="?android:textColorPrimary" />
-            </LinearLayout>
-
-            <!-- Option 3: Power Button Only -->
-            <CheckBox
-                android:id="@+id/cbPowerOnly"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Power Button Only"
-                android:layout_marginTop="16dp"
-                android:buttonTint="?android:textColorPrimary"
-                android:textColor="?android:textColorPrimary" />
-
-            <LinearLayout
-                android:id="@+id/layoutPowerOnly"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="gone"
-                android:layout_marginStart="32dp">
-
-                <TextView
-                    android:text="Number of Power Button Presses"
-                    android:textStyle="bold"
-                    android:layout_marginTop="12dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="?android:textColorPrimary" />
-
-                <SeekBar
-                    android:id="@+id/seekPowerPressCount"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:max="9"
-                    android:progress="2"
-                    android:progressTint="?attr/calcButtonBackground"
-                    android:thumbTint="?attr/calcButtonBackground" />
-
-                <TextView
-                    android:id="@+id/tvPowerPressCountVal"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="3"
-                    android:gravity="center"
-                    android:textColor="?android:textColorPrimary" />
-            </LinearLayout>
-
-            <!-- SMS Only (existing) -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="SMS only (no phone call)"
-                    android:textSize="16sp"
-                    android:textColor="?android:textColorPrimary" />
-
-                <Switch
-                    android:id="@+id/swSmsOnly"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:trackTint="?attr/calcButtonBackground"
-                    android:thumbTint="?attr/calcButtonBackground" />
-            </LinearLayout>
-
-            <!-- Toggle Protection Button -->
-            <Button
-                android:id="@+id/btnToggleProtection"
-                android:layout_width="match_parent"
-                android:layout_height="80dp"
-                android:layout_marginTop="32dp"
-                android:layout_marginBottom="16dp"
-                android:text="ACTIVATE"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:singleLine="true"
-                android:background="@drawable/btn_round_primary"
-                android:textColor="#FFFFFF"
-                android:padding="16dp" />
+                    android:elevation="8dp" />
+            </FrameLayout>
 
             <TextView
                 android:id="@+id/tvTimer"
