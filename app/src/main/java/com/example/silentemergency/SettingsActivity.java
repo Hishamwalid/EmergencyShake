@@ -60,17 +60,6 @@ public class SettingsActivity extends AppCompatActivity {
     private static final String KEY_IS_PROTECTION_ACTIVE = "is_protection_active";
     private static final String KEY_PROTECTION_START_TIME = "protection_start_time";
 
-    // UI elements for gesture options
-    private CheckBox cbShakeOnly, cbPowerAndShake, cbPowerOnly;
-    private LinearLayout layoutShakeOnly, layoutPowerAndShake, layoutPowerOnly;
-    private SeekBar seekShakeSensitivity, seekShakeCount;
-    private TextView tvShakeSensitivityVal, tvShakeCountVal;
-    private SeekBar seekPowerShakeSensitivity, seekPowerShakeCount;
-    private TextView tvPowerShakeSensitivityVal, tvPowerShakeCountVal;
-    private SeekBar seekPowerPressCount;
-    private TextView tvPowerPressCountVal;
-    private Switch swSmsOnly;
-
     // Contact picker
     private final ActivityResultLauncher<Intent> contactPickerLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
@@ -132,135 +121,6 @@ public class SettingsActivity extends AppCompatActivity {
         findViewById(R.id.btnSetCurrentLocation).setOnClickListener(v -> getCurrentLocation());
         findViewById(R.id.btnSetDestination).setOnClickListener(v -> openDestinationPicker());
 
-        // Initialize gesture UI elements
-        cbShakeOnly = findViewById(R.id.cbShakeOnly);
-        cbPowerAndShake = findViewById(R.id.cbPowerAndShake);
-        cbPowerOnly = findViewById(R.id.cbPowerOnly);
-        layoutShakeOnly = findViewById(R.id.layoutShakeOnly);
-        layoutPowerAndShake = findViewById(R.id.layoutPowerAndShake);
-        layoutPowerOnly = findViewById(R.id.layoutPowerOnly);
-        seekShakeSensitivity = findViewById(R.id.seekShakeSensitivity);
-        seekShakeCount = findViewById(R.id.seekShakeCount);
-        tvShakeSensitivityVal = findViewById(R.id.tvShakeSensitivityVal);
-        tvShakeCountVal = findViewById(R.id.tvShakeCountVal);
-        seekPowerShakeSensitivity = findViewById(R.id.seekPowerShakeSensitivity);
-        seekPowerShakeCount = findViewById(R.id.seekPowerShakeCount);
-        tvPowerShakeSensitivityVal = findViewById(R.id.tvPowerShakeSensitivityVal);
-        tvPowerShakeCountVal = findViewById(R.id.tvPowerShakeCountVal);
-        seekPowerPressCount = findViewById(R.id.seekPowerPressCount);
-        tvPowerPressCountVal = findViewById(R.id.tvPowerPressCountVal);
-        swSmsOnly = findViewById(R.id.swSmsOnly);
-
-        // Load saved gesture mode
-        String savedMode = prefManager.getGestureMode();
-        cbShakeOnly.setChecked(savedMode.equals("shake"));
-        cbPowerAndShake.setChecked(savedMode.equals("power_shake"));
-        cbPowerOnly.setChecked(savedMode.equals("power_only"));
-        updateGestureLayouts();
-
-        // Load saved values
-        loadShakeSettings();
-        loadPowerPressSettings();  // ✅ This method exists
-        // ❌ Removed: loadPowerShakeSettings(); (not needed – power+shake uses same values)
-
-        // Listeners for checkboxes
-        cbShakeOnly.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (isChecked) {
-                cbPowerAndShake.setChecked(false);
-                cbPowerOnly.setChecked(false);
-                prefManager.setGestureMode("shake");
-                updateGestureLayouts();
-            }
-        });
-        cbPowerAndShake.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (isChecked) {
-                cbShakeOnly.setChecked(false);
-                cbPowerOnly.setChecked(false);
-                prefManager.setGestureMode("power_shake");
-                updateGestureLayouts();
-            }
-        });
-        cbPowerOnly.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (isChecked) {
-                cbShakeOnly.setChecked(false);
-                cbPowerAndShake.setChecked(false);
-                prefManager.setGestureMode("power_only");
-                updateGestureLayouts();
-            }
-        });
-
-        // SeekBar listeners
-        seekShakeSensitivity.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                float val = progress / 10.0f;
-                if (val < 5.0f) val = 5.0f;
-                tvShakeSensitivityVal.setText(String.format("%.1f", val));
-                prefManager.setShakeSensitivity(val);
-                // Also update power+shake SeekBars to keep them in sync
-                seekPowerShakeSensitivity.setProgress(progress);
-                tvPowerShakeSensitivityVal.setText(String.format("%.1f", val));
-            }
-            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
-        });
-        seekShakeCount.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                int val = progress + 1;
-                tvShakeCountVal.setText(String.valueOf(val));
-                prefManager.setShakeCount(val);
-                seekPowerShakeCount.setProgress(progress);
-                tvPowerShakeCountVal.setText(String.valueOf(val));
-            }
-            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
-        });
-
-        // Power+Shake SeekBars – they mirror the shake settings, but we still need to update them when user directly interacts
-        seekPowerShakeSensitivity.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                float val = progress / 10.0f;
-                if (val < 5.0f) val = 5.0f;
-                tvPowerShakeSensitivityVal.setText(String.format("%.1f", val));
-                prefManager.setShakeSensitivity(val);
-                seekShakeSensitivity.setProgress(progress);
-                tvShakeSensitivityVal.setText(String.format("%.1f", val));
-            }
-            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
-        });
-        seekPowerShakeCount.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                int val = progress + 1;
-                tvPowerShakeCountVal.setText(String.valueOf(val));
-                prefManager.setShakeCount(val);
-                seekShakeCount.setProgress(progress);
-                tvShakeCountVal.setText(String.valueOf(val));
-            }
-            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
-        });
-
-        seekPowerPressCount.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                int val = progress + 1;
-                tvPowerPressCountVal.setText(String.valueOf(val));
-                prefManager.setPowerPressCount(val);
-            }
-            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
-        });
-
-        // SMS only switch
-        swSmsOnly.setChecked(prefManager.isSmsOnly());
-        swSmsOnly.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            prefManager.setSmsOnly(isChecked);
-        });
-
         loadContacts();
         updateStartingPointDisplay();
         updateDestinationDisplay();
@@ -282,32 +142,6 @@ public class SettingsActivity extends AppCompatActivity {
             if (isActive) stopProtection();
             else startProtection();
         });
-    }
-
-    private void updateGestureLayouts() {
-        layoutShakeOnly.setVisibility(cbShakeOnly.isChecked() ? View.VISIBLE : View.GONE);
-        layoutPowerAndShake.setVisibility(cbPowerAndShake.isChecked() ? View.VISIBLE : View.GONE);
-        layoutPowerOnly.setVisibility(cbPowerOnly.isChecked() ? View.VISIBLE : View.GONE);
-    }
-
-    private void loadShakeSettings() {
-        float sens = prefManager.getShakeSensitivity();
-        int count = prefManager.getShakeCount();
-        seekShakeSensitivity.setProgress((int)(sens * 10));
-        seekShakeCount.setProgress(count - 1);
-        tvShakeSensitivityVal.setText(String.format("%.1f", sens));
-        tvShakeCountVal.setText(String.valueOf(count));
-        // Sync power+shake SeekBars
-        seekPowerShakeSensitivity.setProgress((int)(sens * 10));
-        seekPowerShakeCount.setProgress(count - 1);
-        tvPowerShakeSensitivityVal.setText(String.format("%.1f", sens));
-        tvPowerShakeCountVal.setText(String.valueOf(count));
-    }
-
-    private void loadPowerPressSettings() {
-        int count = prefManager.getPowerPressCount();
-        seekPowerPressCount.setProgress(count - 1);
-        tvPowerPressCountVal.setText(String.valueOf(count));
     }
 
     private void openDestinationPicker() {
