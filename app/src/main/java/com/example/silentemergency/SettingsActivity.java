@@ -60,6 +60,17 @@ public class SettingsActivity extends AppCompatActivity {
     private static final String KEY_IS_PROTECTION_ACTIVE = "is_protection_active";
     private static final String KEY_PROTECTION_START_TIME = "protection_start_time";
 
+    // UI elements for gesture options
+    private CheckBox cbShakeOnly, cbPowerAndShake, cbPowerOnly;
+    private LinearLayout layoutShakeOnly, layoutPowerAndShake, layoutPowerOnly;
+    private SeekBar seekShakeSensitivity, seekShakeCount;
+    private TextView tvShakeSensitivityVal, tvShakeCountVal;
+    private SeekBar seekPowerShakeSensitivity, seekPowerShakeCount;
+    private TextView tvPowerShakeSensitivityVal, tvPowerShakeCountVal;
+    private SeekBar seekPowerPressCount;
+    private TextView tvPowerPressCountVal;
+    private Switch swSmsOnly;
+
     // Contact picker
     private final ActivityResultLauncher<Intent> contactPickerLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
@@ -121,6 +132,127 @@ public class SettingsActivity extends AppCompatActivity {
         findViewById(R.id.btnSetCurrentLocation).setOnClickListener(v -> getCurrentLocation());
         findViewById(R.id.btnSetDestination).setOnClickListener(v -> openDestinationPicker());
 
+        // Initialize gesture UI elements
+        cbShakeOnly = findViewById(R.id.cbShakeOnly);
+        cbPowerAndShake = findViewById(R.id.cbPowerAndShake);
+        cbPowerOnly = findViewById(R.id.cbPowerOnly);
+        layoutShakeOnly = findViewById(R.id.layoutShakeOnly);
+        layoutPowerAndShake = findViewById(R.id.layoutPowerAndShake);
+        layoutPowerOnly = findViewById(R.id.layoutPowerOnly);
+        seekShakeSensitivity = findViewById(R.id.seekShakeSensitivity);
+        seekShakeCount = findViewById(R.id.seekShakeCount);
+        tvShakeSensitivityVal = findViewById(R.id.tvShakeSensitivityVal);
+        tvShakeCountVal = findViewById(R.id.tvShakeCountVal);
+        seekPowerShakeSensitivity = findViewById(R.id.seekPowerShakeSensitivity);
+        seekPowerShakeCount = findViewById(R.id.seekPowerShakeCount);
+        tvPowerShakeSensitivityVal = findViewById(R.id.tvPowerShakeSensitivityVal);
+        tvPowerShakeCountVal = findViewById(R.id.tvPowerShakeCountVal);
+        seekPowerPressCount = findViewById(R.id.seekPowerPressCount);
+        tvPowerPressCountVal = findViewById(R.id.tvPowerPressCountVal);
+        swSmsOnly = findViewById(R.id.swSmsOnly);
+
+        // Load saved gesture mode
+        String savedMode = prefManager.getGestureMode();
+        cbShakeOnly.setChecked(savedMode.equals("shake"));
+        cbPowerAndShake.setChecked(savedMode.equals("power_shake"));
+        cbPowerOnly.setChecked(savedMode.equals("power_only"));
+        updateGestureLayouts();
+
+        // Load saved values
+        loadShakeSettings();
+        loadPowerShakeSettings();
+        loadPowerPressSettings();
+
+        // Listeners for checkboxes
+        cbShakeOnly.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                cbPowerAndShake.setChecked(false);
+                cbPowerOnly.setChecked(false);
+                prefManager.setGestureMode("shake");
+                updateGestureLayouts();
+            }
+        });
+        cbPowerAndShake.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                cbShakeOnly.setChecked(false);
+                cbPowerOnly.setChecked(false);
+                prefManager.setGestureMode("power_shake");
+                updateGestureLayouts();
+            }
+        });
+        cbPowerOnly.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                cbShakeOnly.setChecked(false);
+                cbPowerAndShake.setChecked(false);
+                prefManager.setGestureMode("power_only");
+                updateGestureLayouts();
+            }
+        });
+
+        // SeekBar listeners
+        seekShakeSensitivity.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                float val = progress / 10.0f;
+                if (val < 5.0f) val = 5.0f;
+                tvShakeSensitivityVal.setText(String.format("%.1f", val));
+                prefManager.setShakeSensitivity(val);
+            }
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+        seekShakeCount.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                int val = progress + 1;
+                tvShakeCountVal.setText(String.valueOf(val));
+                prefManager.setShakeCount(val);
+            }
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        // For power+shake, we reuse the same sensitivity and count values for simplicity
+        seekPowerShakeSensitivity.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                float val = progress / 10.0f;
+                if (val < 5.0f) val = 5.0f;
+                tvPowerShakeSensitivityVal.setText(String.format("%.1f", val));
+                // Optionally store separate values; here we reuse same as shake
+                prefManager.setShakeSensitivity(val);
+            }
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+        seekPowerShakeCount.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                int val = progress + 1;
+                tvPowerShakeCountVal.setText(String.valueOf(val));
+                prefManager.setShakeCount(val);
+            }
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        seekPowerPressCount.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                int val = progress + 1;
+                tvPowerPressCountVal.setText(String.valueOf(val));
+                prefManager.setPowerPressCount(val);
+            }
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        // SMS only switch
+        swSmsOnly.setChecked(prefManager.isSmsOnly());
+        swSmsOnly.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            prefManager.setSmsOnly(isChecked);
+        });
+
         loadContacts();
         updateStartingPointDisplay();
         updateDestinationDisplay();
@@ -144,6 +276,32 @@ public class SettingsActivity extends AppCompatActivity {
         });
     }
 
+    private void updateGestureLayouts() {
+        layoutShakeOnly.setVisibility(cbShakeOnly.isChecked() ? View.VISIBLE : View.GONE);
+        layoutPowerAndShake.setVisibility(cbPowerAndShake.isChecked() ? View.VISIBLE : View.GONE);
+        layoutPowerOnly.setVisibility(cbPowerOnly.isChecked() ? View.VISIBLE : View.GONE);
+    }
+
+    private void loadShakeSettings() {
+        float sens = prefManager.getShakeSensitivity();
+        int count = prefManager.getShakeCount();
+        seekShakeSensitivity.setProgress((int)(sens * 10));
+        seekShakeCount.setProgress(count - 1);
+        tvShakeSensitivityVal.setText(String.format("%.1f", sens));
+        tvShakeCountVal.setText(String.valueOf(count));
+        // Also update power+shake SeekBars to same values
+        seekPowerShakeSensitivity.setProgress((int)(sens * 10));
+        seekPowerShakeCount.setProgress(count - 1);
+        tvPowerShakeSensitivityVal.setText(String.format("%.1f", sens));
+        tvPowerShakeCountVal.setText(String.valueOf(count));
+    }
+
+    private void loadPowerPressSettings() {
+        int count = prefManager.getPowerPressCount();
+        seekPowerPressCount.setProgress(count - 1);
+        tvPowerPressCountVal.setText(String.valueOf(count));
+    }
+
     private void openDestinationPicker() {
         Intent intent = new Intent(this, DestinationPickerActivity.class);
         destinationLauncher.launch(intent);
@@ -152,15 +310,12 @@ public class SettingsActivity extends AppCompatActivity {
     private void startProtection() {
         Intent intent = new Intent(this, EmergencyService.class);
         ContextCompat.startForegroundService(this, intent);
-
         isActive = true;
         startTime = System.currentTimeMillis();
-
         prefManager.getPrefs().edit()
                 .putBoolean(KEY_IS_PROTECTION_ACTIVE, true)
                 .putLong(KEY_PROTECTION_START_TIME, startTime)
                 .apply();
-
         startTimer();
         btnToggleProtection.setText("DEACTIVATE");
         tvTimer.setTextColor(COLOR_GREEN);
@@ -168,12 +323,9 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void stopProtection() {
         stopService(new Intent(this, EmergencyService.class));
-
         isActive = false;
         prefManager.getPrefs().edit().putBoolean(KEY_IS_PROTECTION_ACTIVE, false).apply();
-
         if (timerRunnable != null) timerHandler.removeCallbacks(timerRunnable);
-
         tvTimer.setText("Protection inactive");
         tvTimer.setTextColor(COLOR_RED);
         btnToggleProtection.setText("ACTIVATE");
@@ -182,15 +334,12 @@ public class SettingsActivity extends AppCompatActivity {
     private void startTimer() {
         timerRunnable = () -> {
             long elapsed = System.currentTimeMillis() - startTime;
-
             long s = (elapsed / 1000) % 60;
             long m = (elapsed / (1000 * 60)) % 60;
             long h = (elapsed / (1000 * 60 * 60));
-
             tvTimer.setText(String.format("Protection active for: %02d:%02d:%02d", h, m, s));
             timerHandler.postDelayed(timerRunnable, 1000);
         };
-
         timerHandler.post(timerRunnable);
     }
 
@@ -213,31 +362,23 @@ public class SettingsActivity extends AppCompatActivity {
                     REQUEST_CURRENT_LOCATION);
             return;
         }
-
         Toast.makeText(this, "Getting location...", Toast.LENGTH_SHORT).show();
-
         LocationManager lm = (LocationManager) getSystemService(LOCATION_SERVICE);
         Location loc = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        if (loc == null)
-            loc = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-
+        if (loc == null) loc = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         if (loc == null) {
             Toast.makeText(this, "Enable GPS and try again", Toast.LENGTH_LONG).show();
             return;
         }
-
         double lat = loc.getLatitude();
         double lng = loc.getLongitude();
-
-        // Try Geocoder first
         String addr = getAddressFromLatLng(lat, lng);
         if (addr != null) {
             prefManager.setStartingPoint(addr);
             updateStartingPointDisplay();
             return;
         }
-
-        // Geocoder failed — fallback to Photon reverse geocoding
+        // Fallback to Photon reverse geocoding
         new Thread(() -> {
             HttpURLConnection connection = null;
             try {
@@ -246,44 +387,36 @@ public class SettingsActivity extends AppCompatActivity {
                 connection.setRequestMethod("GET");
                 connection.setConnectTimeout(8000);
                 connection.setReadTimeout(8000);
-
-                BufferedReader in = new BufferedReader(
-                        new InputStreamReader(connection.getInputStream()));
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 StringBuilder response = new StringBuilder();
                 String line;
                 while ((line = in.readLine()) != null) response.append(line);
                 in.close();
-
                 JSONObject json = new JSONObject(response.toString());
                 JSONArray features = json.getJSONArray("features");
-
                 String finalAddr;
                 if (features.length() > 0) {
                     JSONObject props = features.getJSONObject(0).getJSONObject("properties");
-                    String name    = props.optString("name", "");
-                    String street  = props.optString("street", "");
+                    String name = props.optString("name", "");
+                    String street = props.optString("street", "");
                     String housenr = props.optString("housenumber", "");
-                    String city    = props.optString("city", props.optString("town", props.optString("village", "")));
+                    String city = props.optString("city", props.optString("town", props.optString("village", "")));
                     String country = props.optString("country", "");
-
                     StringBuilder sb = new StringBuilder();
-                    if (!name.isEmpty())    sb.append(name);
+                    if (!name.isEmpty()) sb.append(name);
                     if (!housenr.isEmpty()) { if (sb.length() > 0) sb.append(" "); sb.append(housenr); }
-                    if (!street.isEmpty())  { if (sb.length() > 0) sb.append(", "); sb.append(street); }
-                    if (!city.isEmpty())    { if (sb.length() > 0) sb.append(", "); sb.append(city); }
+                    if (!street.isEmpty()) { if (sb.length() > 0) sb.append(", "); sb.append(street); }
+                    if (!city.isEmpty()) { if (sb.length() > 0) sb.append(", "); sb.append(city); }
                     if (!country.isEmpty()) { if (sb.length() > 0) sb.append(", "); sb.append(country); }
-
                     finalAddr = sb.length() > 0 ? sb.toString() : (lat + "," + lng);
                 } else {
                     finalAddr = lat + "," + lng;
                 }
-
                 runOnUiThread(() -> {
                     prefManager.setStartingPoint(finalAddr);
                     updateStartingPointDisplay();
                     Toast.makeText(this, "Location set: " + finalAddr, Toast.LENGTH_LONG).show();
                 });
-
             } catch (Exception e) {
                 e.printStackTrace();
                 runOnUiThread(() -> {
@@ -312,14 +445,12 @@ public class SettingsActivity extends AppCompatActivity {
         return null;
     }
 
-    // --- CONTACT SECTION with duplicate prevention ---
-
+    // --- CONTACT SECTION with duplicate prevention (unchanged) ---
     private void showAddContactOptions() {
         if (contacts.size() >= 3) {
             Toast.makeText(this, "Max 3 contacts", Toast.LENGTH_SHORT).show();
             return;
         }
-
         String[] opt = {"Import from Contacts", "Manual"};
         new AlertDialog.Builder(this)
                 .setTitle("Add Contact")
@@ -331,7 +462,6 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void openContactPicker() {
         if (!checkContactPermission()) return;
-
         pendingEditIndex = -1;
         Intent i = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
         contactPickerLauncher.launch(i);
@@ -341,25 +471,20 @@ public class SettingsActivity extends AppCompatActivity {
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setPadding(50, 20, 50, 10);
-
         final EditText inputName = new EditText(this);
         inputName.setHint("Name");
         layout.addView(inputName);
-
         final EditText inputNumber = new EditText(this);
         inputNumber.setHint("Phone Number");
         inputNumber.setInputType(android.text.InputType.TYPE_CLASS_PHONE);
         layout.addView(inputNumber);
-
         new AlertDialog.Builder(this)
                 .setTitle("Manual Entry")
                 .setView(layout)
                 .setPositiveButton("Add", (dialog, which) -> {
                     String name = inputName.getText().toString().trim();
                     String phone = inputNumber.getText().toString().trim();
-
                     if (!phone.isEmpty()) {
-                        // Check duplicate before adding
                         if (isPhoneNumberDuplicate(phone)) {
                             Toast.makeText(this, "This phone number is already in your emergency contacts", Toast.LENGTH_SHORT).show();
                             return;
@@ -390,17 +515,13 @@ public class SettingsActivity extends AppCompatActivity {
             if (c != null && c.moveToFirst()) {
                 String id = c.getString(c.getColumnIndexOrThrow(ContactsContract.Contacts._ID));
                 String name = c.getString(c.getColumnIndexOrThrow(ContactsContract.Contacts.DISPLAY_NAME));
-
                 Cursor p = getContentResolver().query(
                         ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
                         null,
                         ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=?",
                         new String[]{id}, null);
-
                 if (p != null && p.moveToFirst()) {
-                    String num = p.getString(p.getColumnIndexOrThrow(
-                            ContactsContract.CommonDataKinds.Phone.NUMBER));
-                    // Remove spaces, dashes, parentheses
+                    String num = p.getString(p.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER));
                     String cleanNumber = num.replaceAll("[\\s\\-()]", "");
                     if (isPhoneNumberDuplicate(cleanNumber)) {
                         Toast.makeText(this, "This phone number is already in your emergency contacts", Toast.LENGTH_SHORT).show();
@@ -416,7 +537,6 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
-    // Helper to check duplicate phone number
     private boolean isPhoneNumberDuplicate(String phoneNumber) {
         for (String contact : contacts) {
             String[] parts = contact.split(":");
@@ -439,31 +559,23 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void refreshContactList() {
         contactsContainer.removeAllViews();
-
         for (int i = 0; i < contacts.size(); i++) {
             String data = contacts.get(i);
             String[] p = data.split(":");
-
             View v = getLayoutInflater().inflate(R.layout.item_contact, null);
-            ((TextView) v.findViewById(R.id.tvContact))
-                    .setText(p[0] + "\n" + p[1]);
-
+            ((TextView) v.findViewById(R.id.tvContact)).setText(p[0] + "\n" + p[1]);
             int index = i;
             v.findViewById(R.id.btnRemove).setOnClickListener(x -> {
                 contacts.remove(index);
                 saveContacts();
                 refreshContactList();
             });
-
             contactsContainer.addView(v);
         }
     }
 
     private void saveContacts() {
-        for (int i = 1; i <= 3; i++)
-            prefManager.setEmergencyNumber(i, "");
-
-        for (int i = 0; i < contacts.size(); i++)
-            prefManager.setEmergencyNumber(i + 1, contacts.get(i));
+        for (int i = 1; i <= 3; i++) prefManager.setEmergencyNumber(i, "");
+        for (int i = 0; i < contacts.size(); i++) prefManager.setEmergencyNumber(i + 1, contacts.get(i));
     }
 }
