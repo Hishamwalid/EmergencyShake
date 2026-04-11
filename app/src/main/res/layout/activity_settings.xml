@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -27,11 +28,13 @@
         android:layout_height="match_parent"
         android:fillViewport="true">
 
-        <RelativeLayout
+        <LinearLayout
+            android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="20dp">
 
+            <!-- Emergency Contacts section (unchanged) -->
             <TextView
                 android:id="@+id/labelContacts"
                 android:layout_width="wrap_content"
@@ -44,7 +47,6 @@
                 android:id="@+id/contactsContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/labelContacts"
                 android:orientation="vertical"
                 android:layout_marginTop="10dp" />
 
@@ -52,20 +54,18 @@
                 android:id="@+id/btnAddContact"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/contactsContainer"
                 android:layout_marginTop="10dp"
                 android:text="Add Emergency Contact"
                 android:textColor="#000000"
                 android:background="@drawable/btn_monochrome_primary"
                 android:textAllCaps="false" />
 
-            <!-- Starting point button and display -->
+            <!-- Starting point (unchanged) -->
             <Button
                 android:id="@+id/btnSetCurrentLocation"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/btnAddContact"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="20dp"
                 android:text="Set Current Location as Starting Point"
                 android:textColor="#000000"
                 android:background="@drawable/btn_monochrome_primary"
@@ -75,19 +75,17 @@
                 android:id="@+id/tvStartingPoint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/btnSetCurrentLocation"
                 android:layout_marginTop="4dp"
                 android:text="Starting point: not set"
                 android:textSize="14sp"
                 android:textColor="?android:textColorPrimary"
                 android:paddingStart="8dp" />
 
-            <!-- Destination button and display -->
+            <!-- Destination (unchanged) -->
             <Button
                 android:id="@+id/btnSetDestination"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/tvStartingPoint"
                 android:layout_marginTop="10dp"
                 android:text="Set Destination"
                 android:textColor="#000000"
@@ -98,46 +96,253 @@
                 android:id="@+id/tvDestination"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/btnSetDestination"
                 android:layout_marginTop="4dp"
                 android:text="Destination: not set"
                 android:textSize="14sp"
                 android:textColor="?android:textColorPrimary"
                 android:paddingStart="8dp" />
 
-            <!-- Round toggle button container -->
-            <LinearLayout
-                android:id="@+id/buttonContainer"
+            <!-- NEW: Gesture Options section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Trigger Options"
+                android:textStyle="bold"
+                android:layout_marginTop="32dp"
+                android:textColor="?android:textColorPrimary" />
+
+            <!-- Option 1: Shake Detection -->
+            <CheckBox
+                android:id="@+id/cbShakeOnly"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/tvDestination"
-                android:layout_marginTop="40dp"
-                android:layout_marginBottom="40dp"
-                android:gravity="center"
-                android:orientation="vertical">
+                android:text="Shake Detection"
+                android:layout_marginTop="16dp"
+                android:buttonTint="?android:textColorPrimary"
+                android:textColor="?android:textColorPrimary" />
 
-                <Button
-                    android:id="@+id/btnToggleProtection"
-                    android:layout_width="120dp"
-                    android:layout_height="120dp"
-                    android:background="@drawable/btn_round_toggle"
-                    android:text="ACTIVATE"
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:gravity="center"
-                    android:elevation="8dp" />
+            <LinearLayout
+                android:id="@+id/layoutShakeOnly"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginStart="32dp">
 
                 <TextView
-                    android:id="@+id/tvTimer"
+                    android:text="Shake Sensitivity"
+                    android:textStyle="bold"
+                    android:layout_marginTop="12dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="Protection inactive"
-                    android:textSize="16sp"
+                    android:textColor="?android:textColorPrimary" />
+
+                <SeekBar
+                    android:id="@+id/seekShakeSensitivity"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="250"
+                    android:progress="150"
+                    android:progressTint="?attr/calcButtonBackground"
+                    android:thumbTint="?attr/calcButtonBackground" />
+
+                <TextView
+                    android:id="@+id/tvShakeSensitivityVal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="15.0"
+                    android:gravity="center"
+                    android:layout_marginBottom="8dp"
+                    android:textColor="?android:textColorPrimary" />
+
+                <TextView
+                    android:text="Number of Shakes Required"
+                    android:textStyle="bold"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="?android:textColorPrimary" />
+
+                <SeekBar
+                    android:id="@+id/seekShakeCount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="9"
+                    android:progress="2"
+                    android:progressTint="?attr/calcButtonBackground"
+                    android:thumbTint="?attr/calcButtonBackground" />
+
+                <TextView
+                    android:id="@+id/tvShakeCountVal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="3"
+                    android:gravity="center"
                     android:textColor="?android:textColorPrimary" />
             </LinearLayout>
 
-        </RelativeLayout>
+            <!-- Option 2: Power Button + Shake -->
+            <CheckBox
+                android:id="@+id/cbPowerAndShake"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Power Button + Shake"
+                android:layout_marginTop="16dp"
+                android:buttonTint="?android:textColorPrimary"
+                android:textColor="?android:textColorPrimary" />
+
+            <LinearLayout
+                android:id="@+id/layoutPowerAndShake"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginStart="32dp">
+
+                <!-- Same SeekBars as above – reuse same IDs? We'll use separate IDs for clarity -->
+                <TextView
+                    android:text="Shake Sensitivity"
+                    android:textStyle="bold"
+                    android:layout_marginTop="12dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="?android:textColorPrimary" />
+
+                <SeekBar
+                    android:id="@+id/seekPowerShakeSensitivity"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="250"
+                    android:progress="150"
+                    android:progressTint="?attr/calcButtonBackground"
+                    android:thumbTint="?attr/calcButtonBackground" />
+
+                <TextView
+                    android:id="@+id/tvPowerShakeSensitivityVal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="15.0"
+                    android:gravity="center"
+                    android:layout_marginBottom="8dp"
+                    android:textColor="?android:textColorPrimary" />
+
+                <TextView
+                    android:text="Number of Shakes Required"
+                    android:textStyle="bold"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="?android:textColorPrimary" />
+
+                <SeekBar
+                    android:id="@+id/seekPowerShakeCount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="9"
+                    android:progress="2"
+                    android:progressTint="?attr/calcButtonBackground"
+                    android:thumbTint="?attr/calcButtonBackground" />
+
+                <TextView
+                    android:id="@+id/tvPowerShakeCountVal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="3"
+                    android:gravity="center"
+                    android:textColor="?android:textColorPrimary" />
+            </LinearLayout>
+
+            <!-- Option 3: Power Button Only -->
+            <CheckBox
+                android:id="@+id/cbPowerOnly"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Power Button Only"
+                android:layout_marginTop="16dp"
+                android:buttonTint="?android:textColorPrimary"
+                android:textColor="?android:textColorPrimary" />
+
+            <LinearLayout
+                android:id="@+id/layoutPowerOnly"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginStart="32dp">
+
+                <TextView
+                    android:text="Number of Power Button Presses"
+                    android:textStyle="bold"
+                    android:layout_marginTop="12dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="?android:textColorPrimary" />
+
+                <SeekBar
+                    android:id="@+id/seekPowerPressCount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="9"
+                    android:progress="2"
+                    android:progressTint="?attr/calcButtonBackground"
+                    android:thumbTint="?attr/calcButtonBackground" />
+
+                <TextView
+                    android:id="@+id/tvPowerPressCountVal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="3"
+                    android:gravity="center"
+                    android:textColor="?android:textColorPrimary" />
+            </LinearLayout>
+
+            <!-- SMS Only (existing) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="SMS only (no phone call)"
+                    android:textSize="16sp"
+                    android:textColor="?android:textColorPrimary" />
+
+                <Switch
+                    android:id="@+id/swSmsOnly"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:trackTint="?attr/calcButtonBackground"
+                    android:thumbTint="?attr/calcButtonBackground" />
+            </LinearLayout>
+
+            <!-- Toggle Protection Button -->
+            <Button
+                android:id="@+id/btnToggleProtection"
+                android:layout_width="match_parent"
+                android:layout_height="80dp"
+                android:layout_marginTop="32dp"
+                android:layout_marginBottom="16dp"
+                android:text="ACTIVATE"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:singleLine="true"
+                android:background="@drawable/btn_round_primary"
+                android:textColor="#FFFFFF"
+                android:padding="16dp" />
+
+            <TextView
+                android:id="@+id/tvTimer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Protection inactive"
+                android:gravity="center"
+                android:textSize="16sp"
+                android:layout_marginBottom="24dp"
+                android:textColor="?android:textColorPrimary" />
+
+        </LinearLayout>
     </ScrollView>
 </LinearLayout>
