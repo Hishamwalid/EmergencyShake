@@ -10,14 +10,12 @@ import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.IBinder;
-import android.util.Log;
+import android.widget.Toast;
 import androidx.core.app.NotificationCompat;
 import com.example.silentemergency.EmergencyHandler;
 import com.example.silentemergency.utils.PrefManager;
 
 public class EmergencyService extends Service {
-    private static final String CHANNEL_ID = "emergency_channel";
-    private static final String TAG = "EmergencyService";
     private SensorManager sensorManager;
     private ShakeDetector shakeDetector;
     private PrefManager prefManager;
@@ -26,31 +24,22 @@ public class EmergencyService extends Service {
     public void onCreate() {
         super.onCreate();
         prefManager = new PrefManager(this);
-        createNotificationChannel();
-        // Do NOT call startForeground here – call it in onStartCommand for Android 16 stability
+        startForeground(1, createNotification());
         setupShakeDetector();
     }
 
-    private void createNotificationChannel() {
+    private Notification createNotification() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
-                    CHANNEL_ID,
-                    "Emergency Service",
+                    "emergency_channel", "Emergency Service",
                     NotificationManager.IMPORTANCE_LOW);
-            channel.setDescription("Monitors shake gestures for emergency alert");
             NotificationManager manager = getSystemService(NotificationManager.class);
-            if (manager != null) {
-                manager.createNotificationChannel(channel);
-            }
+            manager.createNotificationChannel(channel);
         }
-    }
-
-    private Notification createNotification() {
-        return new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("VeilCal Protection Active")
-                .setContentText("Monitoring for emergency shake...")
+        return new NotificationCompat.Builder(this, "emergency_channel")
+                .setContentTitle("Emergency Protection Active")
+                .setContentText("Monitoring...")
                 .setSmallIcon(android.R.drawable.ic_menu_save)
-                .setPriority(NotificationCompat.PRIORITY_LOW)
                 .build();
     }
 
@@ -60,21 +49,19 @@ public class EmergencyService extends Service {
         float sensitivity = prefManager.getShakeSensitivity();
         int requiredShakes = prefManager.getShakeCount();
         shakeDetector = new ShakeDetector(sensitivity, requiredShakes, () -> {
-            Intent intent = new Intent(this, EmergencyHandler.class);
-            startService(intent);
+            String gestureMode = prefManager.getGestureMode();
+            if ("shake".equals(gestureMode)) {
+                Intent intent = new Intent(this, EmergencyHandler.class);
+                startService(intent);
+            } else {
+                Toast.makeText(this, "Gesture mode '" + gestureMode + "' not yet implemented. Please use Shake Detection.", Toast.LENGTH_LONG).show();
+            }
         });
         sensorManager.registerListener(shakeDetector, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        // Critical: startForeground must be called here for Android 14+ stability
-        try {
-            Notification notification = createNotification();
-            startForeground(1, notification);
-        } catch (Exception e) {
-            Log.e(TAG, "Error in onStartCommand: " + e.getMessage());
-        }
         return START_STICKY;
     }
 
