@@ -3,7 +3,18 @@
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="8dp">
+    android:background="@drawable/bg_monochrome_rounded"
+    android:padding="12dp"
+    android:layout_marginBottom="8dp"
+    android:gravity="center_vertical">
+
+    <TextView
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:text="👤"
+        android:textSize="18sp"
+        android:gravity="center"
+        android:layout_marginEnd="10dp" />
 
     <TextView
         android:id="@+id/tvContact"
@@ -18,17 +29,26 @@
     <Button
         android:id="@+id/btnEdit"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="36dp"
         android:text="Edit"
         android:textColor="#000000"
-        android:background="@drawable/btn_monochrome_primary" />
+        android:background="@drawable/btn_monochrome_primary"
+        android:textAllCaps="false"
+        android:textSize="12sp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp" />
 
     <Button
         android:id="@+id/btnRemove"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="36dp"
         android:text="Remove"
-        android:layout_marginStart="12dp"
+        android:layout_marginStart="8dp"
         android:textColor="#000000"
-        android:background="@drawable/btn_monochrome_primary" />
+        android:background="@drawable/btn_monochrome_primary"
+        android:textAllCaps="false"
+        android:textSize="12sp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp" />
+
 </LinearLayout>

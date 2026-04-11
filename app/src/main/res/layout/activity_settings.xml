@@ -32,106 +32,183 @@
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="20dp">
+            android:padding="16dp">
 
-            <!-- Emergency Contacts -->
             <TextView
-                android:id="@+id/labelContacts"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Emergency Contacts"
-                android:textStyle="bold"
-                android:textColor="?android:textColorPrimary" />
+                android:text="Configure your emergency alert settings"
+                android:textSize="13sp"
+                android:textColor="?android:textColorSecondary"
+                android:layout_marginBottom="12dp" />
 
+            <!-- EMERGENCY CONTACTS CARD -->
             <LinearLayout
-                android:id="@+id/contactsContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:layout_marginTop="10dp" />
+                android:background="@drawable/card_background"
+                android:padding="16dp"
+                android:layout_marginBottom="12dp">
 
-            <Button
-                android:id="@+id/btnAddContact"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Emergency Contacts"
+                    android:textStyle="bold"
+                    android:textSize="15sp"
+                    android:textColor="?android:textColorPrimary"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Up to 3 contacts will be alerted when an emergency is triggered."
+                    android:textSize="12sp"
+                    android:textColor="?android:textColorSecondary"
+                    android:layout_marginBottom="12dp" />
+
+                <LinearLayout
+                    android:id="@+id/contactsContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+                <Button
+                    android:id="@+id/btnAddContact"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="8dp"
+                    android:text="Add Emergency Contact"
+                    android:textColor="#000000"
+                    android:background="@drawable/btn_monochrome_primary"
+                    android:textAllCaps="false"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <!-- ROUTE CARD -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="Add Emergency Contact"
-                android:textColor="#000000"
-                android:background="@drawable/btn_monochrome_primary"
-                android:textAllCaps="false" />
+                android:orientation="vertical"
+                android:background="@drawable/card_background"
+                android:padding="16dp"
+                android:layout_marginBottom="12dp">
 
-            <!-- Starting point -->
-            <Button
-                android:id="@+id/btnSetCurrentLocation"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Your Route"
+                    android:textStyle="bold"
+                    android:textSize="15sp"
+                    android:textColor="?android:textColorPrimary"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Set your starting point and destination. These will be included in the emergency message."
+                    android:textSize="12sp"
+                    android:textColor="?android:textColorSecondary"
+                    android:layout_marginBottom="12dp" />
+
+                <Button
+                    android:id="@+id/btnSetCurrentLocation"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="Set Current Location as Starting Point"
+                    android:textColor="#000000"
+                    android:background="@drawable/btn_monochrome_primary"
+                    android:textAllCaps="false"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/tvStartingPoint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginBottom="10dp"
+                    android:text="Starting point: not set"
+                    android:textSize="13sp"
+                    android:textColor="?android:textColorSecondary"
+                    android:paddingStart="4dp" />
+
+                <Button
+                    android:id="@+id/btnSetDestination"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="Set Destination on Map"
+                    android:textColor="#000000"
+                    android:background="@drawable/btn_monochrome_primary"
+                    android:textAllCaps="false"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/tvDestination"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Destination: not set"
+                    android:textSize="13sp"
+                    android:textColor="?android:textColorSecondary"
+                    android:paddingStart="4dp" />
+            </LinearLayout>
+
+            <!-- PROTECTION TOGGLE CARD -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="Set Current Location as Starting Point"
-                android:textColor="#000000"
-                android:background="@drawable/btn_monochrome_primary"
-                android:textAllCaps="false" />
+                android:orientation="vertical"
+                android:background="@drawable/card_background"
+                android:padding="16dp"
+                android:layout_marginBottom="12dp"
+                android:gravity="center_horizontal">
 
-            <TextView
-                android:id="@+id/tvStartingPoint"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Starting point: not set"
-                android:textSize="14sp"
-                android:textColor="?android:textColorPrimary"
-                android:paddingStart="8dp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Protection Status"
+                    android:textStyle="bold"
+                    android:textSize="15sp"
+                    android:textColor="?android:textColorPrimary"
+                    android:layout_marginBottom="4dp" />
 
-            <!-- Destination -->
-            <Button
-                android:id="@+id/btnSetDestination"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="Set Destination"
-                android:textColor="#000000"
-                android:background="@drawable/btn_monochrome_primary"
-                android:textAllCaps="false" />
-
-            <TextView
-                android:id="@+id/tvDestination"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Destination: not set"
-                android:textSize="14sp"
-                android:textColor="?android:textColorPrimary"
-                android:paddingStart="8dp" />
-
-            <!-- Big round Activate/Deactivate button -->
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:layout_marginBottom="16dp">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="When active, the app monitors for your trigger gesture and is ready to send an alert."
+                    android:textSize="12sp"
+                    android:textColor="?android:textColorSecondary"
+                    android:gravity="center"
+                    android:layout_marginBottom="20dp" />
 
                 <Button
                     android:id="@+id/btnToggleProtection"
-                    android:layout_width="120dp"
-                    android:layout_height="120dp"
-                    android:layout_gravity="center"
+                    android:layout_width="140dp"
+                    android:layout_height="140dp"
                     android:text="ACTIVATE"
-                    android:textSize="18sp"
+                    android:textSize="17sp"
                     android:textStyle="bold"
                     android:background="@drawable/btn_round_primary"
                     android:textColor="#FFFFFF"
                     android:gravity="center"
-                    android:elevation="8dp" />
-            </FrameLayout>
+                    android:elevation="6dp"
+                    android:layout_marginBottom="16dp"
+                    android:shadowColor="#000000"
+                    android:shadowDx="0"
+                    android:shadowDy="1"
+                    android:shadowRadius="3" />
 
-            <TextView
-                android:id="@+id/tvTimer"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Protection inactive"
-                android:gravity="center"
-                android:textSize="16sp"
-                android:layout_marginBottom="24dp"
-                android:textColor="?android:textColorPrimary" />
+                <TextView
+                    android:id="@+id/tvTimer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Protection inactive"
+                    android:gravity="center"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="?android:textColorPrimary" />
+            </LinearLayout>
 
         </LinearLayout>
     </ScrollView>
