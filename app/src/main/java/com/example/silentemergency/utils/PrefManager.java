@@ -17,6 +17,10 @@ public class PrefManager {
     private static final String KEY_STARTING_POINT = "starting_point";
     private static final String KEY_DESTINATION = "destination";
 
+    // New keys for gesture options
+    private static final String KEY_GESTURE_MODE = "gesture_mode";
+    private static final String KEY_POWER_PRESS_COUNT = "power_press_count";
+
     private SharedPreferences prefs;
     private SharedPreferences.Editor editor;
 
@@ -126,5 +130,25 @@ public class PrefManager {
     }
     public String getDestination() {
         return prefs.getString(KEY_DESTINATION, "");
+    }
+
+    // ---------- Gesture options (new) ----------
+    /**
+     * Gesture mode: "shake", "power_shake", "power_only"
+     */
+    public void setGestureMode(String mode) {
+        editor.putString(KEY_GESTURE_MODE, mode);
+        editor.apply();
+    }
+    public String getGestureMode() {
+        return prefs.getString(KEY_GESTURE_MODE, "shake");
+    }
+
+    public void setPowerPressCount(int count) {
+        editor.putInt(KEY_POWER_PRESS_COUNT, count);
+        editor.apply();
+    }
+    public int getPowerPressCount() {
+        return prefs.getInt(KEY_POWER_PRESS_COUNT, 3);
     }
 }
