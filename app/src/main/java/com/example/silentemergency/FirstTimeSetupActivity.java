@@ -1,6 +1,7 @@
 package com.example.silentemergency;
 
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.*;
@@ -26,9 +27,21 @@ public class FirstTimeSetupActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_first_time_setup);
 
         prefManager = new PrefManager(this);
+
+        // ✅ On first launch, set initial theme from system
+        if (prefManager.isFirstTime()) {
+            int nightModeFlags = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+            boolean isSystemDark = (nightModeFlags == Configuration.UI_MODE_NIGHT_YES);
+            prefManager.setDarkMode(isSystemDark);
+        }
+
+        // Apply the correct theme
+        if (prefManager.isDarkMode()) setTheme(R.style.AppTheme_Dark);
+        else setTheme(R.style.AppTheme_Light);
+
+        setContentView(R.layout.activity_first_time_setup);
 
         etPassword = findViewById(R.id.etPassword);
         etConfirmPassword = findViewById(R.id.etConfirmPassword);
