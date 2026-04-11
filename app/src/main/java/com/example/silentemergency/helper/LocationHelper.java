@@ -7,57 +7,72 @@ import android.location.LocationManager;
 import com.example.silentemergency.utils.PrefManager;
 
 public class LocationHelper {
-    private Context context;
+
+    private final Context context;
 
     public LocationHelper(Context context) {
         this.context = context;
     }
 
     /**
-     * Generates the custom message: "I was going from [X] to [Y]. I am in danger..."
-     * This is what the EmergencyHandler calls to get the text.
+     * Builds the full emergency message including route info and live location.
+     * Called by EmergencyHandler to get the message text.
      */
     @SuppressLint("MissingPermission")
     public String generateEmergencyMessage() {
         PrefManager pref = new PrefManager(context);
         String start = pref.getStartingPoint();
-        String dest = pref.getDestination();
+        String dest  = pref.getDestination();
 
-        LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        // Build route prefix
+        String routeInfo = "";
+        if (!start.isEmpty() && !dest.isEmpty()) {
+            routeInfo = "I was going from " + start + " to " + dest + ". ";
+        } else if (!start.isEmpty()) {
+            routeInfo = "I was at " + start + ". ";
+        } else if (!dest.isEmpty()) {
+            routeInfo = "I was heading to " + dest + ". ";
+        }
+
+        // Try to get location
         Location location = null;
         try {
-            location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            if (location == null) {
-                location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+            if (lm != null) {
+                location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                if (location == null)
+                    location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                if (location == null)
+                    location = lm.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        // Build the prefix
-        String routeInfo = "";
-        if (!start.isEmpty() && !dest.isEmpty()) {
-            routeInfo = "I was going from " + start + " to " + dest + ". ";
-        }
-
         if (location != null) {
             double lat = location.getLatitude();
             double lon = location.getLongitude();
-            // Using the standard maps link format
             String mapLink = "https://www.google.com/maps?q=" + lat + "," + lon;
             return routeInfo + "I am in danger. Please help. My location: " + mapLink;
         } else {
-            return routeInfo + "I am in danger. Please help. (Location unavailable)";
+            return routeInfo + "I am in danger. Please help. (Location unavailable — GPS may be off)";
         }
     }
 
-    // Legacy support for other parts of the app
+    /**
+     * Legacy method kept for compatibility with any other callers.
+     * Note: customPrefix is ignored here since generateEmergencyMessage
+     * already builds the full message with route info.
+     */
     public void sendLocationAndAlert(String phoneNumber, boolean smsOnly, String customPrefix) {
-        String message = customPrefix + generateEmergencyMessage();
+        String message = generateEmergencyMessage();
         SmsHelper.sendSMS(context, phoneNumber, message);
-
         if (!smsOnly) {
             CallHelper.makeCall(context, phoneNumber);
         }
+    }
+
+    public void sendLocationAndAlert(String phoneNumber, boolean smsOnly) {
+        sendLocationAndAlert(phoneNumber, smsOnly, "");
     }
 }

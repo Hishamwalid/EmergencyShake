@@ -23,16 +23,19 @@ import com.example.silentemergency.EmergencyHandler;
 import com.example.silentemergency.utils.PrefManager;
 
 public class EmergencyService extends Service {
+
     private SensorManager sensorManager;
     private ShakeDetector shakeDetector;
     private PrefManager prefManager;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private PowerManager.WakeLock wakeLock;
 
+    // Power only
     private int powerPressCount = 0;
     private long firstPressTime = 0;
     private Runnable resetPowerOnlyRunnable;
 
+    // Power + shake
     private volatile boolean powerPressedForShake = false;
     private Runnable clearPowerShakeRunnable;
     private volatile boolean emergencyFired = false;
@@ -42,7 +45,6 @@ public class EmergencyService extends Service {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (action == null) return;
-
             String mode = prefManager.getGestureMode();
 
             if (Intent.ACTION_SCREEN_OFF.equals(action) || Intent.ACTION_SCREEN_ON.equals(action)) {
@@ -54,14 +56,11 @@ public class EmergencyService extends Service {
                     long windowMs = prefManager.getPowerShakeWindow() * 1000L;
 
                     acquireWakeLock(windowMs + 1000);
-
-                    // Tiny buzz to confirm power button opened the shake window
                     vibrate(60);
-                    showToast(" ⚡ Power pressed — shake now!");
+                    showToast("⚡ Power pressed — shake now!");
 
-                    if (clearPowerShakeRunnable != null) {
+                    if (clearPowerShakeRunnable != null)
                         mainHandler.removeCallbacks(clearPowerShakeRunnable);
-                    }
 
                     clearPowerShakeRunnable = () -> {
                         if (powerPressedForShake) {
@@ -90,11 +89,13 @@ public class EmergencyService extends Service {
         if (powerPressCount >= required) {
             powerPressCount = 0;
             firstPressTime = 0;
-            if (resetPowerOnlyRunnable != null) mainHandler.removeCallbacks(resetPowerOnlyRunnable);
+            if (resetPowerOnlyRunnable != null)
+                mainHandler.removeCallbacks(resetPowerOnlyRunnable);
             triggerEmergency("Power button (" + required + "x)");
         } else {
-            vibrate(50); // Tick for intermediate power presses
-            if (resetPowerOnlyRunnable != null) mainHandler.removeCallbacks(resetPowerOnlyRunnable);
+            vibrate(50);
+            if (resetPowerOnlyRunnable != null)
+                mainHandler.removeCallbacks(resetPowerOnlyRunnable);
             resetPowerOnlyRunnable = () -> {
                 powerPressCount = 0;
                 firstPressTime = 0;
@@ -121,7 +122,8 @@ public class EmergencyService extends Service {
         int shakeWindowMs = prefManager.getShakeWindow() * 1000;
 
         shakeDetector = new ShakeDetector(sensitivity, requiredShakes, shakeWindowMs,
-                () -> { // FINAL TRIGGER
+                () -> {
+                    // Final trigger callback
                     String mode = prefManager.getGestureMode();
                     if (mode.equals("shake")) {
                         triggerEmergency("Shake trigger");
@@ -129,42 +131,34 @@ public class EmergencyService extends Service {
                         if (powerPressedForShake && !emergencyFired) {
                             emergencyFired = true;
                             powerPressedForShake = false;
-                            if (clearPowerShakeRunnable != null) mainHandler.removeCallbacks(clearPowerShakeRunnable);
+                            if (clearPowerShakeRunnable != null)
+                                mainHandler.removeCallbacks(clearPowerShakeRunnable);
                             releaseWakeLock();
                             triggerEmergency("Power + Shake trigger");
                         }
                     }
                 },
-                () -> { // INTERMEDIATE SHAKE TICK
-                    vibrate(40);
-                }
+                () -> vibrate(40) // Intermediate shake tick
         );
-        sensorManager.registerListener(shakeDetector, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-    }
 
-    private void showToast(String message) {
-        mainHandler.post(() -> Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show());
+        sensorManager.registerListener(shakeDetector, accelerometer,
+                SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     private void triggerEmergency(String reason) {
-        // 1. Vibrate IMMEDIATELY (Hardware priority)
         vibrateHighIntensity();
-
-        // 2. Show Toast on main thread
-        mainHandler.post(() -> Toast.makeText(getApplicationContext(), "🚨 ALERT SENT: " + reason, Toast.LENGTH_LONG).show());
-
-        // 3. Launch the alert logic
+        mainHandler.post(() ->
+                Toast.makeText(getApplicationContext(),
+                        "🚨 ALERT SENT: " + reason, Toast.LENGTH_LONG).show()
+        );
         Intent intent = new Intent(this, EmergencyHandler.class);
         startService(intent);
     }
 
-    // ✅ NEW: Distinct triple-pulse vibration that is much harder to miss while shaking
     private void vibrateHighIntensity() {
         Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         if (v != null && v.hasVibrator()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                // Pattern: [Wait, Vibrate, Wait, Vibrate, Wait, Vibrate]
-                // 0ms delay, 400ms buzz, 100ms pause, 400ms buzz...
                 long[] pattern = {0, 400, 100, 400};
                 v.vibrate(VibrationEffect.createWaveform(pattern, -1));
             } else {
@@ -177,11 +171,18 @@ public class EmergencyService extends Service {
         Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         if (v != null && v.hasVibrator()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                v.vibrate(VibrationEffect.createOneShot(durationMs, VibrationEffect.DEFAULT_AMPLITUDE));
+                v.vibrate(VibrationEffect.createOneShot(durationMs,
+                        VibrationEffect.DEFAULT_AMPLITUDE));
             } else {
                 v.vibrate(durationMs);
             }
         }
+    }
+
+    private void showToast(String message) {
+        mainHandler.post(() ->
+                Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show()
+        );
     }
 
     private void registerPowerButtonReceiver() {
@@ -193,30 +194,46 @@ public class EmergencyService extends Service {
 
     private void acquireWakeLock(long timeout) {
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        if (wakeLock == null) wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Safe:Lock");
-        if (!wakeLock.isHeld()) wakeLock.acquire(timeout);
+        if (wakeLock == null)
+            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SilentEmergency:Lock");
+        if (!wakeLock.isHeld())
+            wakeLock.acquire(timeout);
     }
 
-    private void releaseWakeLock() { if (wakeLock != null && wakeLock.isHeld()) wakeLock.release(); }
+    private void releaseWakeLock() {
+        if (wakeLock != null && wakeLock.isHeld())
+            wakeLock.release();
+    }
 
     private Notification createNotification() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel("emergency_channel", "Safe Mode Active", NotificationManager.IMPORTANCE_LOW);
+            NotificationChannel channel = new NotificationChannel(
+                    "emergency_channel", "Safe Mode Active",
+                    NotificationManager.IMPORTANCE_LOW);
             NotificationManager manager = getSystemService(NotificationManager.class);
             if (manager != null) manager.createNotificationChannel(channel);
         }
         return new NotificationCompat.Builder(this, "emergency_channel")
                 .setContentTitle("Silent Emergency Active")
+                .setContentText("Monitoring for emergency trigger")
                 .setSmallIcon(android.R.drawable.ic_lock_idle_lock)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .build();
     }
 
-    @Override public int onStartCommand(Intent intent, int flags, int startId) { return START_STICKY; }
-    @Override public IBinder onBind(Intent intent) { return null; }
-    @Override public void onDestroy() {
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        return START_STICKY;
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) { return null; }
+
+    @Override
+    public void onDestroy() {
         super.onDestroy();
-        if (sensorManager != null) sensorManager.unregisterListener(shakeDetector);
+        if (sensorManager != null)
+            sensorManager.unregisterListener(shakeDetector);
         try { unregisterReceiver(powerButtonReceiver); } catch (Exception ignored) {}
         releaseWakeLock();
     }
