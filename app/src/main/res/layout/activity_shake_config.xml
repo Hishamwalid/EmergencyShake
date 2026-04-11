@@ -2,227 +2,206 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
     android:background="?android:windowBackground">
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:padding="16dp">
 
         <TextView
-            android:text="Trigger Options"
-            android:textStyle="bold"
-            android:layout_marginTop="16dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="?android:textColorPrimary" />
-
-        <!-- Option 1: Shake Detection -->
-        <CheckBox
-            android:id="@+id/cbShakeOnly"
+            android:text="Choose how to trigger the emergency alert"
+            android:textSize="13sp"
+            android:layout_marginBottom="12dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Shake Detection"
-            android:layout_marginTop="16dp"
-            android:buttonTint="?android:textColorPrimary"
-            android:textColor="?android:textColorPrimary" />
+            android:textColor="?android:textColorSecondary" />
 
         <LinearLayout
-            android:id="@+id/layoutShakeOnly"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:visibility="gone"
-            android:layout_marginStart="32dp">
+            android:background="@drawable/card_background"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
 
-            <TextView
-                android:text="Shake Sensitivity"
-                android:textStyle="bold"
-                android:layout_marginTop="12dp"
-                android:layout_width="wrap_content"
+            <CheckBox
+                android:id="@+id/cbShakeOnly"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text="Shake to Trigger"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:buttonTint="?android:textColorPrimary"
                 android:textColor="?android:textColorPrimary" />
 
-            <SeekBar
-                android:id="@+id/seekShakeSensitivity"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:max="250"
-                android:progress="150"
-                android:progressTint="?attr/calcButtonBackground"
-                android:thumbTint="?attr/calcButtonBackground" />
-
             <TextView
-                android:id="@+id/tvShakeSensitivityVal"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="15.0"
-                android:gravity="center"
+                android:text="Shake your phone rapidly to send the emergency alert."
+                android:textSize="12sp"
+                android:layout_marginTop="2dp"
                 android:layout_marginBottom="8dp"
-                android:textColor="?android:textColorPrimary" />
-
-            <TextView
-                android:text="Number of Shakes Required"
-                android:textStyle="bold"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="?android:textColorPrimary" />
-
-            <SeekBar
-                android:id="@+id/seekShakeCount"
+                android:layout_marginStart="4dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:max="9"
-                android:progress="2"
-                android:progressTint="?attr/calcButtonBackground"
-                android:thumbTint="?attr/calcButtonBackground" />
+                android:textColor="?android:textColorSecondary" />
 
-            <TextView
-                android:id="@+id/tvShakeCountVal"
+            <LinearLayout
+                android:id="@+id/layoutShakeOnly"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="3"
-                android:gravity="center"
-                android:textColor="?android:textColorPrimary" />
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginTop="8dp">
+
+                <TextView android:text="Shake Force Required" android:textStyle="bold" android:textSize="13sp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="?android:textColorPrimary" />
+                <TextView android:text="Higher = needs stronger shake" android:textSize="11sp" android:layout_marginBottom="4dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="?android:textColorSecondary" />
+                <SeekBar android:id="@+id/seekShakeSensitivity" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="200" android:progress="100" android:progressTint="?attr/calcButtonBackground" android:thumbTint="?attr/calcButtonBackground" />
+                <TextView android:id="@+id/tvShakeSensitivityVal" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="15.0" android:gravity="center" android:layout_marginBottom="12dp" android:textColor="?android:textColorPrimary" />
+
+                <TextView android:text="Number of Shakes to Trigger" android:textStyle="bold" android:textSize="13sp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="?android:textColorPrimary" />
+                <TextView android:text="How many shakes needed before alert fires" android:textSize="11sp" android:layout_marginBottom="4dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="?android:textColorSecondary" />
+                <SeekBar android:id="@+id/seekShakeCount" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="9" android:progress="2" android:progressTint="?attr/calcButtonBackground" android:thumbTint="?attr/calcButtonBackground" />
+                <TextView android:id="@+id/tvShakeCountVal" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="3 shakes" android:gravity="center" android:layout_marginBottom="12dp" android:textColor="?android:textColorPrimary" />
+
+                <TextView android:text="Time Allowed to Complete Shakes" android:textStyle="bold" android:textSize="13sp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="?android:textColorPrimary" />
+                <TextView android:text="All shakes must happen within this time window" android:textSize="11sp" android:layout_marginBottom="4dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="?android:textColorSecondary" />
+                <SeekBar android:id="@+id/seekShakeWindow" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="9" android:progress="4" android:progressTint="?attr/calcButtonBackground" android:thumbTint="?attr/calcButtonBackground" />
+                <TextView android:id="@+id/tvShakeWindowVal" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="5 seconds" android:gravity="center" android:textColor="?android:textColorPrimary" />
+
+            </LinearLayout>
         </LinearLayout>
 
-        <!-- Option 2: Power Button + Shake -->
-        <CheckBox
-            android:id="@+id/cbPowerAndShake"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Power Button + Shake"
-            android:layout_marginTop="16dp"
-            android:buttonTint="?android:textColorPrimary"
-            android:textColor="?android:textColorPrimary" />
-
         <LinearLayout
-            android:id="@+id/layoutPowerAndShake"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:visibility="gone"
-            android:layout_marginStart="32dp">
+            android:background="@drawable/card_background"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
 
-            <TextView
-                android:text="Shake Sensitivity"
-                android:textStyle="bold"
-                android:layout_marginTop="12dp"
-                android:layout_width="wrap_content"
+            <CheckBox
+                android:id="@+id/cbPowerAndShake"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text="Press Power + Shake"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:buttonTint="?android:textColorPrimary"
                 android:textColor="?android:textColorPrimary" />
 
-            <SeekBar
-                android:id="@+id/seekPowerShakeSensitivity"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:max="250"
-                android:progress="150"
-                android:progressTint="?attr/calcButtonBackground"
-                android:thumbTint="?attr/calcButtonBackground" />
-
             <TextView
-                android:id="@+id/tvPowerShakeSensitivityVal"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="15.0"
-                android:gravity="center"
+                android:text="Press the power button once, then quickly shake the phone within the allowed time frame."
+                android:textSize="12sp"
+                android:layout_marginTop="2dp"
                 android:layout_marginBottom="8dp"
-                android:textColor="?android:textColorPrimary" />
-
-            <TextView
-                android:text="Number of Shakes Required"
-                android:textStyle="bold"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="?android:textColorPrimary" />
-
-            <SeekBar
-                android:id="@+id/seekPowerShakeCount"
+                android:layout_marginStart="4dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:max="9"
-                android:progress="2"
-                android:progressTint="?attr/calcButtonBackground"
-                android:thumbTint="?attr/calcButtonBackground" />
+                android:textColor="?android:textColorSecondary" />
 
-            <TextView
-                android:id="@+id/tvPowerShakeCountVal"
+            <LinearLayout
+                android:id="@+id/layoutPowerAndShake"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="3"
-                android:gravity="center"
-                android:textColor="?android:textColorPrimary" />
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginTop="8dp">
+
+                <TextView android:text="Shake Force Required" android:textStyle="bold" android:textSize="13sp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="?android:textColorPrimary" />
+                <TextView android:text="Higher = needs stronger shake" android:textSize="11sp" android:layout_marginBottom="4dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="?android:textColorSecondary" />
+                <SeekBar android:id="@+id/seekPowerShakeSensitivity" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="200" android:progress="100" android:progressTint="?attr/calcButtonBackground" android:thumbTint="?attr/calcButtonBackground" />
+                <TextView android:id="@+id/tvPowerShakeSensitivityVal" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="15.0" android:gravity="center" android:layout_marginBottom="12dp" android:textColor="?android:textColorPrimary" />
+
+                <TextView android:text="Number of Shakes to Trigger" android:textStyle="bold" android:textSize="13sp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="?android:textColorPrimary" />
+                <TextView android:text="How many shakes needed after pressing power" android:textSize="11sp" android:layout_marginBottom="4dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="?android:textColorSecondary" />
+                <SeekBar android:id="@+id/seekPowerShakeCount" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="9" android:progress="2" android:progressTint="?attr/calcButtonBackground" android:thumbTint="?attr/calcButtonBackground" />
+                <TextView android:id="@+id/tvPowerShakeCountVal" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="3 shakes" android:gravity="center" android:layout_marginBottom="12dp" android:textColor="?android:textColorPrimary" />
+
+                <TextView android:text="Time Allowed After Power Press" android:textStyle="bold" android:textSize="13sp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="?android:textColorPrimary" />
+                <TextView android:text="You must shake the phone within this time window after pressing power" android:textSize="11sp" android:layout_marginBottom="4dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="?android:textColorSecondary" />
+                <SeekBar android:id="@+id/seekPowerShakeWindow" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="9" android:progress="4" android:progressTint="?attr/calcButtonBackground" android:thumbTint="?attr/calcButtonBackground" />
+                <TextView android:id="@+id/tvPowerShakeWindowVal" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="5 seconds" android:gravity="center" android:textColor="?android:textColorPrimary" />
+
+            </LinearLayout>
         </LinearLayout>
 
-        <!-- Option 3: Power Button Only -->
-        <CheckBox
-            android:id="@+id/cbPowerOnly"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Power Button Only"
-            android:layout_marginTop="16dp"
-            android:buttonTint="?android:textColorPrimary"
-            android:textColor="?android:textColorPrimary" />
-
         <LinearLayout
-            android:id="@+id/layoutPowerOnly"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:visibility="gone"
-            android:layout_marginStart="32dp">
+            android:background="@drawable/card_background"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
 
-            <TextView
-                android:text="Number of Power Button Presses"
+            <CheckBox
+                android:id="@+id/cbPowerOnly"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Rapid Power Button Presses"
+                android:textSize="15sp"
                 android:textStyle="bold"
-                android:layout_marginTop="12dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:buttonTint="?android:textColorPrimary"
                 android:textColor="?android:textColorPrimary" />
-
-            <SeekBar
-                android:id="@+id/seekPowerPressCount"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:max="9"
-                android:progress="2"
-                android:progressTint="?attr/calcButtonBackground"
-                android:thumbTint="?attr/calcButtonBackground" />
 
             <TextView
-                android:id="@+id/tvPowerPressCountVal"
+                android:text="Press the power button multiple times quickly to send the alert."
+                android:textSize="12sp"
+                android:layout_marginTop="2dp"
+                android:layout_marginBottom="8dp"
+                android:layout_marginStart="4dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="3"
-                android:gravity="center"
-                android:textColor="?android:textColorPrimary" />
+                android:textColor="?android:textColorSecondary" />
+
+            <LinearLayout
+                android:id="@+id/layoutPowerOnly"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginTop="8dp">
+
+                <TextView android:text="Number of Presses Required" android:textStyle="bold" android:textSize="13sp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="?android:textColorPrimary" />
+                <TextView android:text="How many times you need to press the power button" android:textSize="11sp" android:layout_marginBottom="4dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="?android:textColorSecondary" />
+                <SeekBar android:id="@+id/seekPowerPressCount" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="9" android:progress="2" android:progressTint="?attr/calcButtonBackground" android:thumbTint="?attr/calcButtonBackground" />
+                <TextView android:id="@+id/tvPowerPressCountVal" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="3 presses" android:gravity="center" android:layout_marginBottom="12dp" android:textColor="?android:textColorPrimary" />
+
+                <TextView android:text="Time Allowed Between Presses" android:textStyle="bold" android:textSize="13sp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="?android:textColorPrimary" />
+                <TextView android:text="All presses must happen within this time window" android:textSize="11sp" android:layout_marginBottom="4dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="?android:textColorSecondary" />
+                <SeekBar android:id="@+id/seekPowerPressWindow" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="9" android:progress="1" android:progressTint="?attr/calcButtonBackground" android:thumbTint="?attr/calcButtonBackground" />
+                <TextView android:id="@+id/tvPowerPressWindowVal" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="2 seconds" android:gravity="center" android:textColor="?android:textColorPrimary" />
+
+            </LinearLayout>
         </LinearLayout>
 
-        <!-- SMS only -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:orientation="vertical"
+            android:background="@drawable/card_background"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
 
-            <TextView
-                android:layout_width="0dp"
+            <CheckBox
+                android:id="@+id/cbSmsOnly"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="SMS only (no phone call)"
-                android:textSize="16sp"
+                android:text="Send SMS Only (no phone call)"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:buttonTint="?android:textColorPrimary"
                 android:textColor="?android:textColorPrimary" />
 
-            <Switch
-                android:id="@+id/swSmsOnly"
-                android:layout_width="wrap_content"
+            <TextView
+                android:text="When enabled, the app will only send a text message. When disabled, it will also call your emergency contacts."
+                android:textSize="12sp"
+                android:layout_marginTop="2dp"
+                android:layout_marginStart="4dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:trackTint="?attr/calcButtonBackground"
-                android:thumbTint="?attr/calcButtonBackground" />
-        </LinearLayout>
+                android:textColor="?android:textColorSecondary" />
 
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>
