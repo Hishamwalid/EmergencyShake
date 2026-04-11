@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.Menu;
@@ -16,6 +17,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
@@ -52,6 +54,7 @@ public class CalculatorActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calculator);
 
+        // Updated Permission Request
         requestAllPermissions();
 
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -80,6 +83,8 @@ public class CalculatorActivity extends AppCompatActivity {
         scrollHistoryToBottom();
     }
 
+    // ---------- Fixed Permission Logic ----------
+
     private void requestAllPermissions() {
         String[] permissions = {
                 Manifest.permission.SEND_SMS,
@@ -87,20 +92,60 @@ public class CalculatorActivity extends AppCompatActivity {
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.CALL_PHONE,
                 Manifest.permission.READ_CONTACTS,
-                Manifest.permission.POST_NOTIFICATIONS
+                Manifest.permission.POST_NOTIFICATIONS,
+                Manifest.permission.READ_PHONE_STATE // Critical for sequential calls
         };
+
         List<String> needed = new ArrayList<>();
         for (String perm : permissions) {
             if (ContextCompat.checkSelfPermission(this, perm) != PackageManager.PERMISSION_GRANTED) {
                 needed.add(perm);
             }
         }
+
         if (!needed.isEmpty()) {
             ActivityCompat.requestPermissions(this, needed.toArray(new String[0]), 200);
+        } else {
+            // If main permissions are okay, check for Background Location (Android 11+)
+            checkBackgroundLocationPermission();
         }
     }
 
-    // ---------- History persistence ----------
+    private void checkBackgroundLocationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED) {
+
+                // Explain to user why background location is needed before the OS prompt
+                Toast.makeText(this, "To send your location while the screen is off, please select 'Allow all the time' in location settings.", Toast.LENGTH_LONG).show();
+
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION}, 201);
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 200) {
+            boolean allGranted = true;
+            for (int i = 0; i < grantResults.length; i++) {
+                if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                    allGranted = false;
+                    if (permissions[i].equals(Manifest.permission.SEND_SMS)) {
+                        Toast.makeText(this, "Alert: Emergency SMS will not work without SMS permission.", Toast.LENGTH_LONG).show();
+                    }
+                }
+            }
+            // If the main batch is done, try to get background location
+            if (allGranted) {
+                checkBackgroundLocationPermission();
+            }
+        }
+    }
+
+    // ---------- History persistence (UNTOUCHED) ----------
     private void loadHistory() {
         SharedPreferences prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
         String json = prefs.getString(KEY_HISTORY, "");
@@ -162,7 +207,7 @@ public class CalculatorActivity extends AppCompatActivity {
         }
     }
 
-    // ---------- Input handling ----------
+    // ---------- Input handling (UNTOUCHED) ----------
     private String getLastNumber() {
         List<String> tokens = tokenizeExpression(currentExpression);
         if (tokens.isEmpty()) return "";
@@ -300,7 +345,7 @@ public class CalculatorActivity extends AppCompatActivity {
         }
     }
 
-    // ---------- Math evaluation ----------
+    // ---------- Math evaluation (UNTOUCHED) ----------
     private double evaluateExpression(String expr) {
         String sanitized = expr.replace("×", "*").replace("÷", "/").replace("−", "-");
         return evaluateFull(sanitized);
@@ -437,7 +482,7 @@ public class CalculatorActivity extends AppCompatActivity {
         return df.format(d).replace(",", ".");
     }
 
-    // ---------- Menu ----------
+    // ---------- Menu (UNTOUCHED) ----------
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_calculator, menu);

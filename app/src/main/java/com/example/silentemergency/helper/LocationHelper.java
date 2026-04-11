@@ -4,7 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.location.Location;
 import android.location.LocationManager;
-import android.widget.Toast;
+import com.example.silentemergency.utils.PrefManager;
 
 public class LocationHelper {
     private Context context;
@@ -13,41 +13,47 @@ public class LocationHelper {
         this.context = context;
     }
 
-    // Legacy method for compatibility
-    public void sendLocationAndAlert(String phoneNumber, boolean smsOnly) {
-        sendLocationAndAlert(phoneNumber, smsOnly, "");
-    }
-
+    /**
+     * Generates the custom message: "I was going from [X] to [Y]. I am in danger..."
+     * This is what the EmergencyHandler calls to get the text.
+     */
     @SuppressLint("MissingPermission")
-    public void sendLocationAndAlert(String phoneNumber, boolean smsOnly, String customPrefix) {
-        LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+    public String generateEmergencyMessage() {
+        PrefManager pref = new PrefManager(context);
+        String start = pref.getStartingPoint();
+        String dest = pref.getDestination();
 
+        LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         Location location = null;
         try {
             location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
             if (location == null) {
                 location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
             }
-            if (location == null) {
-                location = lm.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
-            }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        String message;
+        // Build the prefix
+        String routeInfo = "";
+        if (!start.isEmpty() && !dest.isEmpty()) {
+            routeInfo = "I was going from " + start + " to " + dest + ". ";
+        }
+
         if (location != null) {
             double lat = location.getLatitude();
             double lon = location.getLongitude();
-            String mapLink = "https://maps.google.com/?q=" + lat + "," + lon;
-            message = customPrefix + "I am in danger. Please help. My location: " + mapLink;
+            // Using the standard maps link format
+            String mapLink = "https://www.google.com/maps?q=" + lat + "," + lon;
+            return routeInfo + "I am in danger. Please help. My location: " + mapLink;
         } else {
-            // Send without location rather than failing silently
-            message = customPrefix + "I am in danger. Please help. (Location unavailable — GPS may be off)";
-            Toast.makeText(context, "Warning: Could not get location. Alert sent without coordinates.", Toast.LENGTH_LONG).show();
+            return routeInfo + "I am in danger. Please help. (Location unavailable)";
         }
+    }
 
-        // ✅ Pass context so SmsHelper can fall back to SMS Intent if needed
+    // Legacy support for other parts of the app
+    public void sendLocationAndAlert(String phoneNumber, boolean smsOnly, String customPrefix) {
+        String message = customPrefix + generateEmergencyMessage();
         SmsHelper.sendSMS(context, phoneNumber, message);
 
         if (!smsOnly) {
