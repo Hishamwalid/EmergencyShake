@@ -33,6 +33,34 @@ public class PrefManager {
         prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         editor = prefs.edit();
     }
+    // ── Live location (written by EmergencyService, read by LocationHelper) ───────
+    private static final String KEY_LIVE_LAT  = "live_lat";
+    private static final String KEY_LIVE_LON  = "live_lon";
+    private static final String KEY_LIVE_TIME = "live_location_time";
+
+    public void setLiveLocation(double lat, double lon) {
+        editor.putFloat(KEY_LIVE_LAT, (float) lat);
+        editor.putFloat(KEY_LIVE_LON, (float) lon);
+        editor.putLong(KEY_LIVE_TIME, System.currentTimeMillis());
+        editor.apply();
+    }
+
+    public double getLiveLat() { return prefs.getFloat(KEY_LIVE_LAT, 0f); }
+    public double getLiveLon() { return prefs.getFloat(KEY_LIVE_LON, 0f); }
+    public long   getLiveLocationTime() { return prefs.getLong(KEY_LIVE_TIME, 0L); }
+
+    public boolean hasRecentLiveLocation() {
+        long age = System.currentTimeMillis() - getLiveLocationTime();
+        // Consider location valid if updated within the last 5 minutes
+        return getLiveLocationTime() > 0 && age < 5 * 60 * 1000L;
+    }
+
+    public void clearLiveLocation() {
+        editor.remove(KEY_LIVE_LAT);
+        editor.remove(KEY_LIVE_LON);
+        editor.remove(KEY_LIVE_TIME);
+        editor.apply();
+    }
 
     public SharedPreferences getPrefs() { return prefs; }
 
