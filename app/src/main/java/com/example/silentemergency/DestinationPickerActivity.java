@@ -14,6 +14,7 @@ import android.widget.Filter;
 import android.view.MotionEvent;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -39,26 +40,26 @@ import java.util.List;
 
 public class DestinationPickerActivity extends AppCompatActivity {
 
-    private MapView mapView;
+    private MapView              mapView;
     private AutoCompleteTextView searchBox;
-    private Button btnConfirm;
-    private GeoPoint selectedPoint;
-    private Marker currentMarker;
+    private Button               btnConfirm;
+    private GeoPoint             selectedPoint;
+    private Marker               currentMarker;
 
-    private final List<String> suggestionNames = new ArrayList<>();
+    private final List<String>         suggestionNames   = new ArrayList<>();
     private final List<PlaceSuggestion> suggestionObjects = new ArrayList<>();
-    private ArrayAdapter<String> suggestionsAdapter;
+    private ArrayAdapter<String>        suggestionsAdapter;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private Runnable searchRunnable;
+    private Runnable      searchRunnable;
 
     private static final int LOCATION_PERMISSION_REQUEST = 400;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        Configuration.getInstance().load(this, getSharedPreferences("osmdroid", MODE_PRIVATE));
+        Configuration.getInstance().load(
+                this, getSharedPreferences("osmdroid", MODE_PRIVATE));
         setContentView(R.layout.activity_destination_picker);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -68,7 +69,7 @@ public class DestinationPickerActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        mapView = findViewById(R.id.mapView);
+        mapView   = findViewById(R.id.mapView);
         searchBox = findViewById(R.id.searchBox);
         btnConfirm = findViewById(R.id.btnConfirm);
 
@@ -77,9 +78,10 @@ public class DestinationPickerActivity extends AppCompatActivity {
         mapView.getController().setZoom(12.0);
         centerOnCurrentLocation();
 
-        // Custom adapter that disables internal filtering
-        suggestionsAdapter = new ArrayAdapter<String>(this,
-                android.R.layout.simple_dropdown_item_1line, suggestionNames) {
+        // Custom adapter — internal filtering disabled so results are not
+        // cleared when the user taps a suggestion and the text updates.
+        suggestionsAdapter = new ArrayAdapter<String>(
+                this, android.R.layout.simple_dropdown_item_1line, suggestionNames) {
             @Override
             public Filter getFilter() {
                 return new Filter() {
@@ -87,12 +89,12 @@ public class DestinationPickerActivity extends AppCompatActivity {
                     protected FilterResults performFiltering(CharSequence constraint) {
                         FilterResults results = new FilterResults();
                         results.values = suggestionNames;
-                        results.count = suggestionNames.size();
+                        results.count  = suggestionNames.size();
                         return results;
                     }
-
                     @Override
-                    protected void publishResults(CharSequence constraint, FilterResults results) {
+                    protected void publishResults(CharSequence constraint,
+                                                  FilterResults results) {
                         notifyDataSetChanged();
                     }
                 };
@@ -103,15 +105,19 @@ public class DestinationPickerActivity extends AppCompatActivity {
         searchBox.setThreshold(1);
 
         searchBox.addTextChangedListener(new TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
+            @Override public void beforeTextChanged(
+                    CharSequence s, int start, int count, int after) {}
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (searchRunnable != null) handler.removeCallbacks(searchRunnable);
+            public void onTextChanged(
+                    CharSequence s, int start, int before, int count) {
+                // Cancel any pending search before posting the new one.
+                // FIX: this runnable is also cancelled in onPause/onDestroy
+                // so it never fires after the activity is gone.
+                if (searchRunnable != null)
+                    handler.removeCallbacks(searchRunnable);
                 searchRunnable = () -> fetchSuggestions(s.toString());
                 handler.postDelayed(searchRunnable, 400);
             }
-
             @Override public void afterTextChanged(Editable s) {}
         });
 
@@ -122,16 +128,18 @@ public class DestinationPickerActivity extends AppCompatActivity {
                 selectPoint(point);
                 mapView.getController().animateTo(point);
                 mapView.getController().setZoom(16.0);
-
-                InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-                if (imm != null) imm.hideSoftInputFromWindow(searchBox.getWindowToken(), 0);
+                InputMethodManager imm =
+                        (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                if (imm != null)
+                    imm.hideSoftInputFromWindow(searchBox.getWindowToken(), 0);
             }
         });
 
         mapView.getOverlays().add(new Overlay() {
             @Override
             public boolean onSingleTapConfirmed(MotionEvent e, MapView mapView) {
-                GeoPoint point = (GeoPoint) mapView.getProjection().fromPixels((int) e.getX(), (int) e.getY());
+                GeoPoint point = (GeoPoint) mapView.getProjection()
+                        .fromPixels((int) e.getX(), (int) e.getY());
                 selectPoint(point);
                 return true;
             }
@@ -141,7 +149,8 @@ public class DestinationPickerActivity extends AppCompatActivity {
     }
 
     private void centerOnCurrentLocation() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
@@ -150,15 +159,16 @@ public class DestinationPickerActivity extends AppCompatActivity {
             return;
         }
         try {
-            LocationManager lm = (LocationManager) getSystemService(LOCATION_SERVICE);
+            LocationManager lm =
+                    (LocationManager) getSystemService(LOCATION_SERVICE);
             if (lm == null) return;
-
-            Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            Location location =
+                    lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
             if (location == null)
                 location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-
             if (location != null) {
-                GeoPoint current = new GeoPoint(location.getLatitude(), location.getLongitude());
+                GeoPoint current = new GeoPoint(
+                        location.getLatitude(), location.getLongitude());
                 mapView.getController().setCenter(current);
                 mapView.getController().setZoom(14.0);
             }
@@ -169,43 +179,44 @@ public class DestinationPickerActivity extends AppCompatActivity {
 
     private void fetchSuggestions(String query) {
         if (query == null || query.trim().length() < 1) return;
-
         new Thread(() -> {
             HttpURLConnection connection = null;
             try {
-                String url = "https://photon.komoot.io/api/?q=" +
-                        URLEncoder.encode(query, "UTF-8") +
-                        "&limit=6&lang=en";
-
+                String url = "https://photon.komoot.io/api/?q="
+                        + URLEncoder.encode(query, "UTF-8")
+                        + "&limit=6&lang=en";
                 connection = (HttpURLConnection) new URL(url).openConnection();
                 connection.setRequestMethod("GET");
                 connection.setConnectTimeout(8000);
                 connection.setReadTimeout(8000);
 
-                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                BufferedReader in = new BufferedReader(
+                        new InputStreamReader(connection.getInputStream()));
                 StringBuilder response = new StringBuilder();
                 String line;
                 while ((line = in.readLine()) != null) response.append(line);
                 in.close();
 
                 JSONObject jsonResponse = new JSONObject(response.toString());
-                JSONArray features = jsonResponse.getJSONArray("features");
+                JSONArray  features     = jsonResponse.getJSONArray("features");
 
                 List<PlaceSuggestion> tempObjects = new ArrayList<>();
-                List<String> tempNames = new ArrayList<>();
+                List<String>          tempNames   = new ArrayList<>();
 
                 for (int i = 0; i < features.length(); i++) {
                     JSONObject feature = features.getJSONObject(i);
-                    JSONArray coords = feature.getJSONObject("geometry").getJSONArray("coordinates");
+                    JSONArray  coords  = feature
+                            .getJSONObject("geometry")
+                            .getJSONArray("coordinates");
                     double lon = coords.getDouble(0);
                     double lat = coords.getDouble(1);
 
-                    JSONObject props = feature.getJSONObject("properties");
-                    String name = props.optString("name", "");
-                    String city = props.optString("city", "");
-                    String country = props.optString("country", "");
-
+                    JSONObject    props   = feature.getJSONObject("properties");
+                    String        name    = props.optString("name", "");
+                    String        city    = props.optString("city", "");
+                    String        country = props.optString("country", "");
                     StringBuilder display = new StringBuilder();
+
                     if (!name.isEmpty()) display.append(name);
                     if (!city.isEmpty() && !city.equals(name)) {
                         if (display.length() > 0) display.append(", ");
@@ -227,16 +238,17 @@ public class DestinationPickerActivity extends AppCompatActivity {
                     suggestionNames.clear();
                     suggestionNames.addAll(tempNames);
                     suggestionsAdapter.notifyDataSetChanged();
-
-                    if (!suggestionNames.isEmpty() && searchBox.isAttachedToWindow()) {
+                    if (!suggestionNames.isEmpty() && searchBox.isAttachedToWindow())
                         searchBox.showDropDown();
-                    }
                 });
 
             } catch (Exception e) {
                 e.printStackTrace();
                 runOnUiThread(() ->
-                        Toast.makeText(this, "Search error: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                        Toast.makeText(this,
+                                "Search error: " + e.getMessage(),
+                                Toast.LENGTH_SHORT).show()
+                );
             } finally {
                 if (connection != null) connection.disconnect();
             }
@@ -245,8 +257,8 @@ public class DestinationPickerActivity extends AppCompatActivity {
 
     private void selectPoint(GeoPoint point) {
         selectedPoint = point;
-        if (currentMarker != null) mapView.getOverlays().remove(currentMarker);
-
+        if (currentMarker != null)
+            mapView.getOverlays().remove(currentMarker);
         currentMarker = new Marker(mapView);
         currentMarker.setPosition(point);
         currentMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
@@ -256,18 +268,24 @@ public class DestinationPickerActivity extends AppCompatActivity {
 
     private void confirmSelection() {
         if (selectedPoint == null) {
-            Toast.makeText(this, "Please tap on the map or search for a location", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this,
+                    "Please tap on the map or search for a location",
+                    Toast.LENGTH_SHORT).show();
             return;
         }
         Intent intent = new Intent();
-        intent.putExtra("address", selectedPoint.getLatitude() + "," + selectedPoint.getLongitude());
+        intent.putExtra("address",
+                selectedPoint.getLatitude() + ","
+                        + selectedPoint.getLongitude());
         setResult(RESULT_OK, intent);
         finish();
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(
+                requestCode, permissions, grantResults);
         if (requestCode == LOCATION_PERMISSION_REQUEST
                 && grantResults.length > 0
                 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -291,5 +309,19 @@ public class DestinationPickerActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         mapView.onPause();
+        // FIX: cancel any pending Photon search so it does not fire
+        // after the activity is paused and update a dead UI reference.
+        if (searchRunnable != null) {
+            handler.removeCallbacks(searchRunnable);
+            searchRunnable = null;
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Belt-and-suspenders cleanup — also cancels any callbacks
+        // that were posted between onPause and onDestroy.
+        handler.removeCallbacksAndMessages(null);
     }
 }

@@ -12,6 +12,7 @@ import android.util.Log;
 
 import com.example.silentemergency.utils.PrefManager;
 
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class LocationHelper {
@@ -31,12 +32,12 @@ public class LocationHelper {
 
     // ── Main async entry point called by EmergencyHandler ────────────────────
     public void generateEmergencyMessageAsync(LocationMessageCallback callback) {
-        PrefManager pref     = new PrefManager(context);
-        String      route    = buildRouteInfo(pref.getStartingPoint(), pref.getDestination());
+        PrefManager pref  = new PrefManager(context);
+        String      route = buildRouteInfo(
+                pref.getStartingPoint(), pref.getDestination());
 
-        // ✅ PRIMARY PATH: use the live location tracked by EmergencyService
-        // This is updated every 30 seconds while protection is active.
-        // Zero delay — use it immediately.
+        // Layer 1: use the live location tracked by EmergencyService.
+        // Updated every 30 seconds while protection is active — zero delay.
         if (pref.hasRecentLiveLocation()) {
             double lat = pref.getLiveLat();
             double lon = pref.getLiveLon();
@@ -45,16 +46,16 @@ public class LocationHelper {
             return;
         }
 
-        // ⚠ FALLBACK PATH: protection was not active long enough to get a live
-        // fix (e.g. triggered within the first 30 seconds). Request a fresh fix
-        // with an 8-second timeout, then fall back to last-known.
-        Log.w(TAG, "No live location available — requesting fresh fix");
+        // Layer 2: no live fix yet (triggered within first 30 seconds).
+        // Request a fresh fix with an 8-second timeout.
+        Log.w(TAG, "No live location — requesting fresh fix");
         requestFreshFix(route, callback);
     }
 
     @SuppressLint("MissingPermission")
     private void requestFreshFix(String route, LocationMessageCallback callback) {
-        LocationManager lm      = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        LocationManager lm      = (LocationManager)
+                context.getSystemService(Context.LOCATION_SERVICE);
         Handler         handler = new Handler(Looper.getMainLooper());
         AtomicBoolean   done    = new AtomicBoolean(false);
         LocationListener[] ref  = new LocationListener[1];
@@ -64,16 +65,19 @@ public class LocationHelper {
                 if (lm != null && ref[0] != null)
                     try { lm.removeUpdates(ref[0]); } catch (Exception ignored) {}
                 Log.w(TAG, "Fresh fix timed out — using last-known");
-                callback.onMessageReady(buildMessage(route, getLastKnownFallback(lm)));
+                callback.onMessageReady(
+                        buildMessage(route, getLastKnownFallback(lm)));
             }
         };
 
         ref[0] = new LocationListener() {
-            @Override public void onLocationChanged(Location loc) {
+            @Override
+            public void onLocationChanged(Location loc) {
                 if (done.compareAndSet(false, true)) {
                     handler.removeCallbacks(timeout);
                     try { lm.removeUpdates(this); } catch (Exception ignored) {}
-                    callback.onMessageReady(buildMessage(route, loc.getLatitude(), loc.getLongitude()));
+                    callback.onMessageReady(
+                            buildMessage(route, loc.getLatitude(), loc.getLongitude()));
                 }
             }
             @Override public void onStatusChanged(String p, int s, Bundle e) {}
@@ -84,11 +88,14 @@ public class LocationHelper {
         boolean registered = false;
         if (lm != null) {
             for (String provider : new String[]{
-                    LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER}) {
+                    LocationManager.GPS_PROVIDER,
+                    LocationManager.NETWORK_PROVIDER}) {
                 try {
                     if (lm.isProviderEnabled(provider)) {
-                        lm.requestSingleUpdate(provider, ref[0], Looper.getMainLooper());
+                        lm.requestSingleUpdate(
+                                provider, ref[0], Looper.getMainLooper());
                         registered = true;
+                        Log.d(TAG, "Fresh fix requested from: " + provider);
                         break;
                     }
                 } catch (Exception e) {
@@ -100,29 +107,41 @@ public class LocationHelper {
         if (registered) {
             handler.postDelayed(timeout, FRESH_FIX_TIMEOUT);
         } else {
-            callback.onMessageReady(buildMessage(route, getLastKnownFallback(lm)));
+            // Layer 3: no provider available — use last known immediately
+            callback.onMessageReady(
+                    buildMessage(route, getLastKnownFallback(lm)));
         }
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // ── Message builders ──────────────────────────────────────────────────────
     private String buildRouteInfo(String start, String dest) {
-        if (!start.isEmpty() && !dest.isEmpty())
+        if (start != null && !start.isEmpty() &&
+                dest != null && !dest.isEmpty())
             return "I was going from " + start + " to " + dest + ". ";
-        else if (!start.isEmpty())
+        else if (start != null && !start.isEmpty())
             return "I was at " + start + ". ";
-        else if (!dest.isEmpty())
+        else if (dest != null && !dest.isEmpty())
             return "I was heading to " + dest + ". ";
         return "";
     }
 
     private String buildMessage(String route, double lat, double lon) {
-        String link = "https://www.google.com/maps?q=" + lat + "," + lon;
-        return route + "I am in danger. Please help. My location: " + link;
+        // Use String.format with explicit locale to prevent scientific notation.
+        // Without Locale.US, some devices format doubles as "2,3456" or "1.23E-4"
+        // which breaks the Google Maps link entirely.
+        String mapLink = String.format(
+                Locale.US,
+                "https://www.google.com/maps?q=%.6f,%.6f",
+                lat, lon);
+        return route + "I am in danger. Please help. My location: " + mapLink;
     }
 
     private String buildMessage(String route, Location location) {
-        if (location != null) return buildMessage(route, location.getLatitude(), location.getLongitude());
-        return route + "I am in danger. Please help. (Location unavailable — GPS may be off)";
+        if (location != null)
+            return buildMessage(route, location.getLatitude(), location.getLongitude());
+        return route
+                + "I am in danger. Please help. "
+                + "(Location unavailable \u2014 GPS may be off)";
     }
 
     @SuppressLint("MissingPermission")
@@ -130,22 +149,29 @@ public class LocationHelper {
         if (lm == null) return null;
         try {
             Location loc = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            if (loc == null) loc = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            if (loc == null) loc = lm.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
+            if (loc == null)
+                loc = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            if (loc == null)
+                loc = lm.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
             return loc;
-        } catch (Exception e) { return null; }
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     // ── Legacy sync method — kept so nothing else in the app breaks ───────────
     @SuppressLint("MissingPermission")
     public String generateEmergencyMessage() {
         PrefManager     pref  = new PrefManager(context);
-        String          route = buildRouteInfo(pref.getStartingPoint(), pref.getDestination());
-        LocationManager lm    = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        String          route = buildRouteInfo(
+                pref.getStartingPoint(), pref.getDestination());
+        LocationManager lm    = (LocationManager)
+                context.getSystemService(Context.LOCATION_SERVICE);
         return buildMessage(route, getLastKnownFallback(lm));
     }
 
-    public void sendLocationAndAlert(String phoneNumber, boolean smsOnly, String customPrefix) {
+    public void sendLocationAndAlert(
+            String phoneNumber, boolean smsOnly, String customPrefix) {
         SmsHelper.sendSMS(context, phoneNumber, generateEmergencyMessage());
         if (!smsOnly) CallHelper.makeCall(context, phoneNumber);
     }

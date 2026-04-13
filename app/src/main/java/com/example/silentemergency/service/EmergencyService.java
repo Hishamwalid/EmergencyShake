@@ -34,38 +34,46 @@ public class EmergencyService extends Service {
 
     private static final String TAG = "EmergencyService";
 
-    private SensorManager   sensorManager;
-    private ShakeDetector   shakeDetector;
-    private PrefManager     prefManager;
-    private LocationManager locationManager;
+    private SensorManager    sensorManager;
+    private ShakeDetector    shakeDetector;
+    private PrefManager      prefManager;
+    private LocationManager  locationManager;
     private LocationListener locationListener;
 
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private PowerManager.WakeLock wakeLock;
 
-    // Power only
+    // ── Trigger cooldown ──────────────────────────────────────────────────────
+    // Prevents multiple SMS batches firing from a single emergency event.
+    // Once triggered, all further gestures are ignored for COOLDOWN_MS.
+    private static final long COOLDOWN_MS      = 60_000L; // 60 seconds
+    private volatile boolean  triggerOnCooldown = false;
+    private Runnable          resetCooldownRunnable;
+
+    // ── Power only ────────────────────────────────────────────────────────────
     private int      powerPressCount       = 0;
     private long     firstPressTime        = 0;
     private Runnable resetPowerOnlyRunnable;
 
-    // Power + shake
+    // ── Power + shake ─────────────────────────────────────────────────────────
     private volatile boolean powerPressedForShake = false;
-    private Runnable clearPowerShakeRunnable;
-    private volatile boolean emergencyFired       = false;
+    private Runnable         clearPowerShakeRunnable;
+    private volatile boolean emergencyFired        = false;
 
-    // ── Power button receiver ─────────────────────────────────────────────────
+    // ── Power button broadcast receiver ───────────────────────────────────────
     private final BroadcastReceiver powerButtonReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (action == null) return;
             String mode = prefManager.getGestureMode();
-            if (Intent.ACTION_SCREEN_OFF.equals(action) || Intent.ACTION_SCREEN_ON.equals(action)) {
+            if (Intent.ACTION_SCREEN_OFF.equals(action) ||
+                    Intent.ACTION_SCREEN_ON.equals(action)) {
                 if (mode.equals("power_only")) {
                     handlePowerOnlyPress();
                 } else if (mode.equals("power_shake")) {
                     powerPressedForShake = true;
-                    emergencyFired = false;
+                    emergencyFired       = false;
                     long windowMs = prefManager.getPowerShakeWindow() * 1000L;
                     acquireWakeLock(windowMs + 1000);
                     vibrate(60);
@@ -87,13 +95,15 @@ public class EmergencyService extends Service {
     private void handlePowerOnlyPress() {
         long now      = System.currentTimeMillis();
         long windowMs = prefManager.getPowerPressWindow() * 1000L;
-        int required  = prefManager.getPowerPressCount();
+        int  required = prefManager.getPowerPressCount();
+
         if (powerPressCount == 0 || (now - firstPressTime) > windowMs) {
             powerPressCount = 1;
             firstPressTime  = now;
         } else {
             powerPressCount++;
         }
+
         if (powerPressCount >= required) {
             powerPressCount = 0;
             firstPressTime  = 0;
@@ -104,7 +114,10 @@ public class EmergencyService extends Service {
             vibrate(50);
             if (resetPowerOnlyRunnable != null)
                 mainHandler.removeCallbacks(resetPowerOnlyRunnable);
-            resetPowerOnlyRunnable = () -> { powerPressCount = 0; firstPressTime = 0; };
+            resetPowerOnlyRunnable = () -> {
+                powerPressCount = 0;
+                firstPressTime  = 0;
+            };
             mainHandler.postDelayed(resetPowerOnlyRunnable, windowMs);
         }
     }
@@ -113,25 +126,23 @@ public class EmergencyService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        prefManager   = new PrefManager(this);
+        prefManager     = new PrefManager(this);
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         startForeground(1, createNotification());
         setupShakeDetector();
         registerPowerButtonReceiver();
-        startLiveLocationTracking();   // ← NEW: GPS stays on while protection is active
+        startLiveLocationTracking();
     }
 
     // ── Live GPS tracking ─────────────────────────────────────────────────────
-    // Registers a location listener for the duration of the service.
-    // Updates PrefManager with the latest fix every 30 seconds or 10 metres.
-    // When the emergency triggers, LocationHelper reads this stored fix instantly.
     @SuppressLint("MissingPermission")
     private void startLiveLocationTracking() {
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-                prefManager.setLiveLocation(location.getLatitude(), location.getLongitude());
+                prefManager.setLiveLocation(
+                        location.getLatitude(), location.getLongitude());
                 Log.d(TAG, "Live location updated: "
                         + location.getLatitude() + ", " + location.getLongitude());
             }
@@ -142,14 +153,13 @@ public class EmergencyService extends Service {
 
         boolean registered = false;
 
-        // Try GPS provider first (most accurate)
         try {
             if (locationManager != null &&
                     locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                 locationManager.requestLocationUpdates(
                         LocationManager.GPS_PROVIDER,
-                        30_000L,   // minimum 30 seconds between updates
-                        10f,       // minimum 10 metres movement between updates
+                        30_000L,
+                        10f,
                         locationListener,
                         Looper.getMainLooper());
                 registered = true;
@@ -159,7 +169,6 @@ public class EmergencyService extends Service {
             Log.e(TAG, "GPS provider failed: " + e.getMessage());
         }
 
-        // Also register Network provider as a supplementary source
         try {
             if (locationManager != null &&
                     locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
@@ -190,7 +199,6 @@ public class EmergencyService extends Service {
         } catch (Exception e) {
             Log.e(TAG, "Error stopping location tracking: " + e.getMessage());
         }
-        // Clear the stored live location when protection is deactivated
         prefManager.clearLiveLocation();
     }
 
@@ -204,7 +212,9 @@ public class EmergencyService extends Service {
         int shakeWindowMs  = prefManager.getShakeWindow() * 1000;
 
         shakeDetector = new ShakeDetector(
-                sensitivity, requiredShakes, shakeWindowMs,
+                sensitivity,
+                requiredShakes,
+                shakeWindowMs,
                 () -> {
                     String mode = prefManager.getGestureMode();
                     if (mode.equals("shake")) {
@@ -229,19 +239,40 @@ public class EmergencyService extends Service {
 
     // ── Emergency trigger ─────────────────────────────────────────────────────
     private void triggerEmergency(String reason) {
+        // If we already fired within the last 60 seconds, ignore completely.
+        // This prevents the shake detector resetting and firing again while
+        // the user is still physically shaking during the same emergency event.
+        if (triggerOnCooldown) {
+            Log.d(TAG, "Trigger ignored — cooldown active (" + reason + ")");
+            return;
+        }
+
+        // Arm the cooldown immediately before doing anything else
+        triggerOnCooldown = true;
+        if (resetCooldownRunnable != null)
+            mainHandler.removeCallbacks(resetCooldownRunnable);
+        resetCooldownRunnable = () -> {
+            triggerOnCooldown = false;
+            Log.d(TAG, "Trigger cooldown reset — ready for next emergency");
+        };
+        mainHandler.postDelayed(resetCooldownRunnable, COOLDOWN_MS);
+
+        // Proceed with the actual emergency dispatch
         vibrateHighIntensity();
         mainHandler.post(() ->
                 Toast.makeText(getApplicationContext(),
-                        "🚨 ALERT SENT: " + reason, Toast.LENGTH_LONG).show());
+                        "🚨 ALERT SENT: " + reason, Toast.LENGTH_LONG).show()
+        );
         startService(new Intent(this, EmergencyHandler.class));
     }
 
-    // ── Vibration helpers ─────────────────────────────────────────────────────
+    // ── Vibration ─────────────────────────────────────────────────────────────
     private void vibrateHighIntensity() {
         Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         if (v != null && v.hasVibrator()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                v.vibrate(VibrationEffect.createWaveform(new long[]{0, 400, 100, 400}, -1));
+                v.vibrate(VibrationEffect.createWaveform(
+                        new long[]{0, 400, 100, 400}, -1));
             else
                 v.vibrate(new long[]{0, 400, 100, 400}, -1);
         }
@@ -251,7 +282,8 @@ public class EmergencyService extends Service {
         Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         if (v != null && v.hasVibrator()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                v.vibrate(VibrationEffect.createOneShot(durationMs, VibrationEffect.DEFAULT_AMPLITUDE));
+                v.vibrate(VibrationEffect.createOneShot(
+                        durationMs, VibrationEffect.DEFAULT_AMPLITUDE));
             else
                 v.vibrate(durationMs);
         }
@@ -259,10 +291,12 @@ public class EmergencyService extends Service {
 
     private void showToast(String message) {
         mainHandler.post(() ->
-                Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show());
+                Toast.makeText(getApplicationContext(),
+                        message, Toast.LENGTH_SHORT).show()
+        );
     }
 
-    // ── Broadcast receiver ────────────────────────────────────────────────────
+    // ── Power button receiver ─────────────────────────────────────────────────
     private void registerPowerButtonReceiver() {
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_SCREEN_OFF);
@@ -274,19 +308,23 @@ public class EmergencyService extends Service {
     private void acquireWakeLock(long timeout) {
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         if (wakeLock == null)
-            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SilentEmergency:Lock");
-        if (!wakeLock.isHeld()) wakeLock.acquire(timeout);
+            wakeLock = pm.newWakeLock(
+                    PowerManager.PARTIAL_WAKE_LOCK, "SilentEmergency:Lock");
+        if (!wakeLock.isHeld())
+            wakeLock.acquire(timeout);
     }
 
     private void releaseWakeLock() {
-        if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
+        if (wakeLock != null && wakeLock.isHeld())
+            wakeLock.release();
     }
 
     // ── Notification ──────────────────────────────────────────────────────────
     private Notification createNotification() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
-                    "emergency_channel", "Safe Mode Active",
+                    "emergency_channel",
+                    "Safe Mode Active",
                     NotificationManager.IMPORTANCE_LOW);
             NotificationManager manager = getSystemService(NotificationManager.class);
             if (manager != null) manager.createNotificationChannel(channel);
@@ -310,10 +348,13 @@ public class EmergencyService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        stopLiveLocationTracking();   // ← unregisters GPS, clears stored location
+        stopLiveLocationTracking();
         if (sensorManager != null)
             sensorManager.unregisterListener(shakeDetector);
         try { unregisterReceiver(powerButtonReceiver); } catch (Exception ignored) {}
         releaseWakeLock();
+        if (resetCooldownRunnable != null)
+            mainHandler.removeCallbacks(resetCooldownRunnable);
+        mainHandler.removeCallbacksAndMessages(null);
     }
 }

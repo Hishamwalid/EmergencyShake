@@ -29,131 +29,132 @@ import java.util.List;
 
 public class EmergencyHandler extends Service {
 
-    private static final String TAG = "EmergencyHandler";
-    private static final String CHANNEL_ID = "emergency_alert_channel";
-    private static final int NOTIF_ID = 99;
+    private static final String TAG                   = "EmergencyHandler";
+    private static final String CHANNEL_ID            = "emergency_alert_channel";
+    private static final int    NOTIF_ID              = 99;
+    private static final long   SMS_FALLBACK_DELAY_MS = 6000L;
+    private static final long   CALL_SAFETY_TIMEOUT_MS= 45000L;
 
-    // Wait after opening SMS app before starting calls
-    private static final long SMS_FALLBACK_DELAY_MS = 6000;
-
-    // Per-call safety timeout — move on if phone state never fires
-    private static final long CALL_SAFETY_TIMEOUT_MS = 45000;
-
-    private TelephonyManager telephonyManager;
-    private final List<String> callQueue = new ArrayList<>();
-    private int currentCallIndex = 0;
-    private boolean isCallActive = false;
-
-    private Object modernListener;
+    private TelephonyManager   telephonyManager;
+    private final List<String> callQueue              = new ArrayList<>();
+    private int                currentCallIndex       = 0;
+    private boolean            isCallActive           = false;
+    private Object             modernListener;
     private PhoneStateListener legacyListener;
-
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private Runnable callSafetyTimeoutRunnable;
+    private final Handler      mainHandler            = new Handler(Looper.getMainLooper());
+    private Runnable           callSafetyTimeoutRunnable;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-
-        // ✅ CRITICAL FIX: Must be foreground service so Android doesn't kill us
-        // during the 6-second SMS wait or multi-contact call sequence.
-        startForeground(NOTIF_ID, buildNotification("Emergency alert in progress..."));
+        telephonyManager = (TelephonyManager)
+                getSystemService(Context.TELEPHONY_SERVICE);
+        // Must call startForeground immediately — Android 14+ throws
+        // ForegroundServiceStartNotAllowedException if delayed beyond 5 seconds.
+        startForeground(NOTIF_ID, buildNotification("Getting your location..."));
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         PrefManager pref = new PrefManager(this);
-        List<String> validContacts = new ArrayList<>();
 
-        // 1. Collect valid phone numbers
+        // 1. Collect valid contacts
+        List<String> validContacts = new ArrayList<>();
         for (int i = 1; i <= 3; i++) {
             String contact = pref.getEmergencyNumber(i);
             if (contact != null && !contact.isEmpty()) {
+                // FIX: split(":", 2) limits to 2 parts so contact names that
+                // contain a colon (e.g. "Dr. Smith: John") are handled correctly.
                 String phoneNumber = contact.contains(":")
-                        ? contact.split(":")[1]
+                        ? contact.split(":", 2)[1]
                         : contact;
                 validContacts.add(phoneNumber.trim());
             }
         }
 
         if (validContacts.isEmpty()) {
-            Toast.makeText(this, "⚠ No emergency contacts set", Toast.LENGTH_LONG).show();
+            Toast.makeText(this,
+                    "⚠ No emergency contacts set", Toast.LENGTH_LONG).show();
             stopSelf();
             return START_NOT_STICKY;
         }
 
-        // 2. Generate emergency message once
-        String messageBody = new LocationHelper(this).generateEmergencyMessage();
+        updateNotification("Getting your current location...");
 
-        // 3. Try background SMS for ALL contacts
-        boolean allSmsSent = true;
-        for (String number : validContacts) {
-            boolean sent = SmsHelper.sendSMS(this, number, messageBody);
-            if (!sent) {
-                allSmsSent = false;
-                Log.w(TAG, "Background SMS failed for: " + number);
+        // 2. Resolve location then dispatch — everything runs inside the callback
+        // so SMS is only sent after the best available location is determined.
+        new LocationHelper(this).generateEmergencyMessageAsync(messageBody -> {
+
+            Log.d(TAG, "Message ready — dispatching to "
+                    + validContacts.size() + " contact(s)");
+            updateNotification("Sending emergency alerts...");
+
+            // 3. Attempt background SMS to ALL contacts simultaneously
+            boolean allSmsSent = true;
+            for (String number : validContacts) {
+                boolean sent = SmsHelper.sendSMS(this, number, messageBody);
+                if (!sent) {
+                    allSmsSent = false;
+                    Log.w(TAG, "Background SMS failed for: " + number);
+                }
             }
-        }
 
-        // 4. Handle SMS result
-        if (!allSmsSent) {
-            // Background SMS blocked — open SMS app with FIRST contact pre-filled
-            // User taps Send manually. We wait 6 seconds then call everyone.
-            updateNotification("SMS blocked — calls starting in 6 seconds...");
-            Toast.makeText(this,
-                    "SMS blocked. Tap Send in the SMS app. Calls start in 6 seconds.",
-                    Toast.LENGTH_LONG).show();
-            SmsHelper.openManualSms(this, validContacts.get(0), messageBody);
-        } else {
-            updateNotification("SMS sent — starting calls...");
-            Toast.makeText(this,
-                    "✅ Emergency SMS sent to " + validContacts.size() + " contact(s)",
-                    Toast.LENGTH_LONG).show();
-        }
-
-        // 5. Start sequential calling (or wait 6s after SMS fallback)
-        if (!pref.isSmsOnly()) {
-            callQueue.addAll(validContacts);
-            registerCallStateListener();
-
+            // 4. Handle SMS result
             if (!allSmsSent) {
-                // ✅ postDelayed works because we are now a foreground service
-                mainHandler.postDelayed(this::dialNextNumber, SMS_FALLBACK_DELAY_MS);
+                updateNotification("SMS blocked — calls starting in 6 seconds...");
+                Toast.makeText(this,
+                        "SMS blocked. Tap Send in the SMS app. "
+                                + "Calls start in 6 seconds.",
+                        Toast.LENGTH_LONG).show();
+                SmsHelper.openManualSms(this, validContacts.get(0), messageBody);
             } else {
-                dialNextNumber();
+                updateNotification("SMS sent — starting calls...");
+                Toast.makeText(this,
+                        "✅ Emergency SMS sent to "
+                                + validContacts.size() + " contact(s)",
+                        Toast.LENGTH_LONG).show();
             }
-        } else {
-            // SMS-only mode — we are done
-            mainHandler.postDelayed(this::stopSelf, 3000);
-        }
+
+            // 5. Start sequential calls (or wait 6s after SMS fallback)
+            if (!pref.isSmsOnly()) {
+                callQueue.addAll(validContacts);
+                registerCallStateListener();
+                if (!allSmsSent) {
+                    mainHandler.postDelayed(this::dialNextNumber, SMS_FALLBACK_DELAY_MS);
+                } else {
+                    dialNextNumber();
+                }
+            } else {
+                mainHandler.postDelayed(this::stopSelf, 3000);
+            }
+        });
 
         return START_NOT_STICKY;
     }
 
-    // ─── SEQUENTIAL CALLING ──────────────────────────────────────────────
-
+    // ── Sequential calling ────────────────────────────────────────────────────
     private void dialNextNumber() {
         if (currentCallIndex >= callQueue.size()) {
-            Log.d(TAG, "All contacts called. Done.");
+            Log.d(TAG, "All contacts attempted. Done.");
             unregisterCallStateListener();
             stopSelf();
             return;
         }
 
         String number = callQueue.get(currentCallIndex);
-        isCallActive = false;
+        isCallActive  = false;
 
-        Log.d(TAG, "Calling " + (currentCallIndex + 1) + "/" + callQueue.size() + ": " + number);
-        updateNotification("Calling contact " + (currentCallIndex + 1)
-                + " of " + callQueue.size() + "...");
+        Log.d(TAG, "Calling " + (currentCallIndex + 1)
+                + "/" + callQueue.size() + ": " + number);
+        updateNotification("Calling contact "
+                + (currentCallIndex + 1) + " of " + callQueue.size() + "...");
 
         CallHelper.makeCall(this, number);
 
-        // Safety timeout — if phone state never fires (no answer, voicemail, etc.)
-        // move to next contact after 45 seconds
+        // Safety timeout — advances to next contact if call state never fires
         cancelSafetyTimeout();
         callSafetyTimeoutRunnable = () -> {
-            Log.w(TAG, "Safety timeout reached for: " + number + " — moving to next");
+            Log.w(TAG, "Safety timeout for " + number + " — moving to next");
             moveToNextContact();
         };
         mainHandler.postDelayed(callSafetyTimeoutRunnable, CALL_SAFETY_TIMEOUT_MS);
@@ -163,7 +164,7 @@ public class EmergencyHandler extends Service {
         cancelSafetyTimeout();
         isCallActive = false;
         currentCallIndex++;
-        // Brief pause so phone resets between calls
+        // Brief pause so the dialer resets cleanly between calls
         mainHandler.postDelayed(this::dialNextNumber, 2000);
     }
 
@@ -174,15 +175,8 @@ public class EmergencyHandler extends Service {
         }
     }
 
-    /**
-     * Call flow:
-     *   Dialing / Answered → OFFHOOK (stays until call ends) → IDLE → next
-     *   Rejected / Busy    → OFFHOOK briefly → IDLE quickly → next
-     *   No answer          → OFFHOOK → IDLE after carrier timeout → next
-     *                        (45s safety timeout also catches this)
-     */
     private void handleCallStateChanged(int state) {
-        Log.d(TAG, "Call state: " + state);
+        Log.d(TAG, "Call state changed: " + state);
         if (state == TelephonyManager.CALL_STATE_OFFHOOK) {
             isCallActive = true;
         } else if (state == TelephonyManager.CALL_STATE_IDLE && isCallActive) {
@@ -191,8 +185,7 @@ public class EmergencyHandler extends Service {
         }
     }
 
-    // ─── PHONE STATE LISTENER ────────────────────────────────────────────
-
+    // ── Telephony listener (version-safe) ─────────────────────────────────────
     private void registerCallStateListener() {
         if (telephonyManager == null) return;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -206,7 +199,8 @@ public class EmergencyHandler extends Service {
                     handleCallStateChanged(state);
                 }
             };
-            telephonyManager.listen(legacyListener, PhoneStateListener.LISTEN_CALL_STATE);
+            telephonyManager.listen(
+                    legacyListener, PhoneStateListener.LISTEN_CALL_STATE);
         }
     }
 
@@ -219,7 +213,8 @@ public class EmergencyHandler extends Service {
                             (TelephonyCallback) modernListener);
             } else {
                 if (legacyListener != null)
-                    telephonyManager.listen(legacyListener, PhoneStateListener.LISTEN_NONE);
+                    telephonyManager.listen(
+                            legacyListener, PhoneStateListener.LISTEN_NONE);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -235,8 +230,7 @@ public class EmergencyHandler extends Service {
         }
     }
 
-    // ─── NOTIFICATION HELPERS ────────────────────────────────────────────
-
+    // ── Notifications ─────────────────────────────────────────────────────────
     private Notification buildNotification(String text) {
         createNotificationChannel();
         return new NotificationCompat.Builder(this, CHANNEL_ID)
@@ -251,9 +245,7 @@ public class EmergencyHandler extends Service {
     private void updateNotification(String text) {
         NotificationManager nm =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        if (nm != null) {
-            nm.notify(NOTIF_ID, buildNotification(text));
-        }
+        if (nm != null) nm.notify(NOTIF_ID, buildNotification(text));
     }
 
     private void createNotificationChannel() {
@@ -268,8 +260,7 @@ public class EmergencyHandler extends Service {
         }
     }
 
-    // ─── LIFECYCLE ───────────────────────────────────────────────────────
-
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -279,7 +270,5 @@ public class EmergencyHandler extends Service {
     }
 
     @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
+    public IBinder onBind(Intent intent) { return null; }
 }
