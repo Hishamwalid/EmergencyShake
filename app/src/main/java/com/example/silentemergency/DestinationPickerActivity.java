@@ -15,13 +15,11 @@ import android.widget.Filter;
 import android.view.MotionEvent;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.osmdroid.config.Configuration;
@@ -54,7 +52,6 @@ public class DestinationPickerActivity extends AppCompatActivity {
     private final List<String>         suggestionNames   = new ArrayList<>();
     private final List<PlaceSuggestion> suggestionObjects = new ArrayList<>();
     private ArrayAdapter<String>        suggestionsAdapter;
-
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Runnable      searchRunnable;
 
@@ -98,6 +95,7 @@ public class DestinationPickerActivity extends AppCompatActivity {
                         results.count  = suggestionNames.size();
                         return results;
                     }
+
                     @Override
                     protected void publishResults(CharSequence constraint,
                                                   FilterResults results) {
@@ -109,10 +107,10 @@ public class DestinationPickerActivity extends AppCompatActivity {
 
         searchBox.setAdapter(suggestionsAdapter);
         searchBox.setThreshold(1);
-
         searchBox.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(
                     CharSequence s, int start, int count, int after) {}
+
             @Override
             public void onTextChanged(
                     CharSequence s, int start, int before, int count) {
@@ -121,6 +119,7 @@ public class DestinationPickerActivity extends AppCompatActivity {
                 searchRunnable = () -> fetchSuggestions(s.toString());
                 handler.postDelayed(searchRunnable, 400);
             }
+
             @Override public void afterTextChanged(Editable s) {}
         });
 
@@ -189,6 +188,7 @@ public class DestinationPickerActivity extends AppCompatActivity {
                 // We got the fix, we can stop listening now to save battery
                 locationManager.removeUpdates(this);
             }
+
             @Override public void onProviderDisabled(@NonNull String provider) {}
             @Override public void onProviderEnabled(@NonNull String provider) {}
             @Override public void onStatusChanged(String provider, int status, Bundle extras) {}
@@ -205,6 +205,7 @@ public class DestinationPickerActivity extends AppCompatActivity {
 
     private void fetchSuggestions(String query) {
         if (query == null || query.trim().length() < 1) return;
+
         new Thread(() -> {
             HttpURLConnection connection = null;
             try {
@@ -225,7 +226,6 @@ public class DestinationPickerActivity extends AppCompatActivity {
 
                 JSONObject jsonResponse = new JSONObject(response.toString());
                 JSONArray  features     = jsonResponse.getJSONArray("features");
-
                 List<PlaceSuggestion> tempObjects = new ArrayList<>();
                 List<String>          tempNames   = new ArrayList<>();
 
@@ -241,8 +241,8 @@ public class DestinationPickerActivity extends AppCompatActivity {
                     String        name    = props.optString("name", "");
                     String        city    = props.optString("city", "");
                     String        country = props.optString("country", "");
-                    StringBuilder display = new StringBuilder();
 
+                    StringBuilder display = new StringBuilder();
                     if (!name.isEmpty()) display.append(name);
                     if (!city.isEmpty() && !city.equals(name)) {
                         if (display.length() > 0) display.append(", ");
@@ -267,7 +267,6 @@ public class DestinationPickerActivity extends AppCompatActivity {
                     if (!suggestionNames.isEmpty() && searchBox.isAttachedToWindow())
                         searchBox.showDropDown();
                 });
-
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
@@ -294,6 +293,7 @@ public class DestinationPickerActivity extends AppCompatActivity {
                     Toast.LENGTH_SHORT).show();
             return;
         }
+
         Intent intent = new Intent();
         intent.putExtra("address",
                 selectedPoint.getLatitude() + ","
