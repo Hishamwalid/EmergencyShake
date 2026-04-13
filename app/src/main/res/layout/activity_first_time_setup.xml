@@ -3,21 +3,18 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:windowBackground">
-
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="24dp"
         android:gravity="center_horizontal">
-
         <ImageView
             android:layout_width="72dp"
             android:layout_height="72dp"
             android:src="@mipmap/ic_launcher"
             android:layout_marginTop="32dp"
             android:layout_marginBottom="8dp" />
-
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -26,7 +23,6 @@
             android:textStyle="bold"
             android:layout_marginBottom="4dp"
             android:textColor="?android:textColorPrimary" />
-
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -34,7 +30,6 @@
             android:textSize="13sp"
             android:layout_marginBottom="28dp"
             android:textColor="?android:textColorSecondary" />
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -51,20 +46,34 @@
                 android:textSize="15sp"
                 android:textColor="?android:textColorPrimary"
                 android:layout_marginBottom="4dp" />
-
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Enter this password in the calculator to access emergency settings."
                 android:textSize="12sp"
                 android:textColor="?android:textColorSecondary"
-                android:layout_marginBottom="12dp" />
-
+                android:layout_marginBottom="8dp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="@drawable/bg_monochrome_rounded"
+                android:padding="10dp"
+                android:layout_marginBottom="12dp">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="&#8226; Digits only (0&#8211;9)\n&#8226; Minimum 4 digits\n&#8226; Cannot start with zero"
+                    android:textSize="12sp"
+                    android:lineSpacingExtra="3dp"
+                    android:textColor="?android:textColorSecondary" />
+            </LinearLayout>
             <EditText
                 android:id="@+id/etPassword"
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
-                android:hint="Password (numbers only)"
+                android:hint="Password (e.g. 1234, 99201)"
                 android:inputType="numberPassword"
                 android:background="@drawable/bg_monochrome_rounded"
                 android:paddingStart="16dp"
@@ -72,20 +81,19 @@
                 android:textColor="?android:textColorPrimary"
                 android:textColorHint="?android:textColorHint"
                 android:layout_marginBottom="10dp" />
-
             <EditText
                 android:id="@+id/etConfirmPassword"
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
-                android:hint="Confirm Password"
+                android:hint="Confirm password"
                 android:inputType="numberPassword"
                 android:background="@drawable/bg_monochrome_rounded"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:textColor="?android:textColorPrimary"
                 android:textColorHint="?android:textColorHint" />
-        </LinearLayout>
 
+        </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -93,7 +101,6 @@
             android:background="@drawable/card_background"
             android:padding="16dp"
             android:layout_marginBottom="24dp">
-
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -102,7 +109,6 @@
                 android:textSize="15sp"
                 android:textColor="?android:textColorPrimary"
                 android:layout_marginBottom="4dp" />
-
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -110,14 +116,12 @@
                 android:textSize="12sp"
                 android:textColor="?android:textColorSecondary"
                 android:layout_marginBottom="12dp" />
-
             <Spinner
                 android:id="@+id/spQuestions"
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
                 android:background="@drawable/bg_monochrome_rounded"
                 android:layout_marginBottom="10dp" />
-
             <EditText
                 android:id="@+id/etCustomQuestion"
                 android:layout_width="match_parent"
@@ -131,7 +135,6 @@
                 android:textColorHint="?android:textColorHint"
                 android:layout_marginBottom="10dp"
                 android:visibility="gone" />
-
             <EditText
                 android:id="@+id/etAnswer"
                 android:layout_width="match_parent"
@@ -144,7 +147,6 @@
                 android:textColor="?android:textColorPrimary"
                 android:textColorHint="?android:textColorHint" />
         </LinearLayout>
-
         <Button
             android:id="@+id/btnSave"
             android:layout_width="match_parent"
@@ -155,6 +157,5 @@
             android:textSize="16sp"
             android:textStyle="bold"
             android:layout_marginBottom="24dp" />
-
     </LinearLayout>
 </ScrollView>

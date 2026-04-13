@@ -9,19 +9,21 @@ import com.example.silentemergency.utils.PrefManager;
 public class ResetPasswordActivity extends AppCompatActivity {
 
     private LinearLayout verifyContainer;
-    private TextView tvCurrentQuestion;
-    private EditText etAnswer;
-    private Button btnVerifyAnswer;
+    private TextView     tvCurrentQuestion;
+    private EditText     etAnswer;
+    private Button       btnVerifyAnswer;
+
     private LinearLayout layoutNewData;
-    private CheckBox cbChangePassword, cbChangeQuestion;
+    private CheckBox     cbChangePassword, cbChangeQuestion;
     private LinearLayout layoutPassword, layoutChangeQuestion;
-    private EditText etNewPassword, etConfirmPassword;
-    private Spinner spNewQuestions;
-    private EditText etNewCustomQuestion, etNewAnswer;
-    private Button btnSetPassword;
+    private EditText     etNewPassword, etConfirmPassword;
+    private Spinner      spNewQuestions;
+    private EditText     etNewCustomQuestion, etNewAnswer;
+    private Button       btnSetPassword;
+
     private PrefManager prefManager;
 
-    private String[] predefinedQuestions = {
+    private final String[] predefinedQuestions = {
             "What is your oldest sibling's nickname?",
             "What was the name of your first-grade teacher or childhood best friend?",
             "What was the name of your first pet or stuffed toy?",
@@ -34,63 +36,62 @@ public class ResetPasswordActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         prefManager = new PrefManager(this);
-        // Apply current theme before layout
         if (prefManager.isDarkMode()) setTheme(R.style.AppTheme_Dark);
         else setTheme(R.style.AppTheme_Light);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reset_password);
 
-        verifyContainer = findViewById(R.id.verifyContainer);
+        verifyContainer   = findViewById(R.id.verifyContainer);
         tvCurrentQuestion = findViewById(R.id.tvCurrentQuestion);
-        etAnswer = findViewById(R.id.etAnswer);
-        btnVerifyAnswer = findViewById(R.id.btnVerifyAnswer);
-        layoutNewData = findViewById(R.id.layoutNewData);
-        cbChangePassword = findViewById(R.id.cbChangePassword);
-        cbChangeQuestion = findViewById(R.id.cbChangeQuestion);
-        layoutPassword = findViewById(R.id.layoutPassword);
+        etAnswer          = findViewById(R.id.etAnswer);
+        btnVerifyAnswer   = findViewById(R.id.btnVerifyAnswer);
+        layoutNewData     = findViewById(R.id.layoutNewData);
+        cbChangePassword  = findViewById(R.id.cbChangePassword);
+        cbChangeQuestion  = findViewById(R.id.cbChangeQuestion);
+        layoutPassword    = findViewById(R.id.layoutPassword);
         layoutChangeQuestion = findViewById(R.id.layoutChangeQuestion);
-        etNewPassword = findViewById(R.id.etNewPassword);
+        etNewPassword     = findViewById(R.id.etNewPassword);
         etConfirmPassword = findViewById(R.id.etConfirmPassword);
-        spNewQuestions = findViewById(R.id.spNewQuestions);
+        spNewQuestions    = findViewById(R.id.spNewQuestions);
         etNewCustomQuestion = findViewById(R.id.etNewCustomQuestion);
-        etNewAnswer = findViewById(R.id.etNewAnswer);
-        btnSetPassword = findViewById(R.id.btnSetPassword);
+        etNewAnswer       = findViewById(R.id.etNewAnswer);
+        btnSetPassword    = findViewById(R.id.btnSetPassword);
 
         // Display current question
         String currentQuestion = prefManager.getSecurityQuestion();
-        tvCurrentQuestion.setText(currentQuestion != null ? currentQuestion : "No question set");
+        tvCurrentQuestion.setText(
+                currentQuestion != null ? currentQuestion : "No question set");
 
-        // Setup spinner for new question
+        // Spinner for new question
         String[] items = new String[predefinedQuestions.length + 1];
         System.arraycopy(predefinedQuestions, 0, items, 0, predefinedQuestions.length);
         items[predefinedQuestions.length] = "Custom...";
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, items);
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                this, android.R.layout.simple_spinner_item, items);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spNewQuestions.setAdapter(adapter);
 
         spNewQuestions.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position == predefinedQuestions.length) {
-                    etNewCustomQuestion.setVisibility(View.VISIBLE);
-                } else {
-                    etNewCustomQuestion.setVisibility(View.GONE);
-                }
+            public void onItemSelected(AdapterView<?> parent, View view,
+                                       int position, long id) {
+                etNewCustomQuestion.setVisibility(
+                        position == predefinedQuestions.length
+                                ? View.VISIBLE : View.GONE);
             }
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
+            @Override public void onNothingSelected(AdapterView<?> parent) {}
         });
 
         // Show/hide password section
-        cbChangePassword.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            layoutPassword.setVisibility(isChecked ? View.VISIBLE : View.GONE);
-        });
+        cbChangePassword.setOnCheckedChangeListener((btn, checked) ->
+                layoutPassword.setVisibility(checked ? View.VISIBLE : View.GONE));
 
         // Show/hide question section
-        cbChangeQuestion.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            layoutChangeQuestion.setVisibility(isChecked ? View.VISIBLE : View.GONE);
-        });
+        cbChangeQuestion.setOnCheckedChangeListener((btn, checked) ->
+                layoutChangeQuestion.setVisibility(checked ? View.VISIBLE : View.GONE));
 
+        // Phase 1 — verify identity
         btnVerifyAnswer.setOnClickListener(v -> {
             String answer = etAnswer.getText().toString().trim();
             if (prefManager.checkSecurityAnswer(answer)) {
@@ -101,45 +102,79 @@ public class ResetPasswordActivity extends AppCompatActivity {
             }
         });
 
+        // Phase 2 — apply changes
         btnSetPassword.setOnClickListener(v -> {
             boolean passwordChanged = false;
             boolean questionChanged = false;
 
+            // ── Password change section ───────────────────────────────────
             if (cbChangePassword.isChecked()) {
-                String newPass = etNewPassword.getText().toString().trim();
-                String confirm = etConfirmPassword.getText().toString().trim();
+                String newPass  = etNewPassword.getText().toString().trim();
+                String confirm  = etConfirmPassword.getText().toString().trim();
 
                 if (newPass.isEmpty() || confirm.isEmpty()) {
-                    Toast.makeText(this, "Please fill both password fields", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this,
+                            "Please fill both password fields",
+                            Toast.LENGTH_SHORT).show();
                     return;
                 }
-                if (!newPass.equals(confirm)) {
-                    Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
-                    return;
-                }
+
+                // Digits only
                 if (!newPass.matches("\\d+")) {
-                    Toast.makeText(this, "Password must contain only numbers", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this,
+                            "Password must contain digits only",
+                            Toast.LENGTH_SHORT).show();
                     return;
                 }
+
+                // No leading zero
+                if (newPass.startsWith("0")) {
+                    Toast.makeText(this,
+                            "Password cannot start with zero",
+                            Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // Minimum 4 digits
+                if (newPass.length() < 4) {
+                    Toast.makeText(this,
+                            "Password must be at least 4 digits",
+                            Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // Confirmation match
+                if (!newPass.equals(confirm)) {
+                    Toast.makeText(this,
+                            "Passwords do not match", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 prefManager.setPassword(newPass);
                 passwordChanged = true;
             }
 
+            // ── Question change section ───────────────────────────────────
             if (cbChangeQuestion.isChecked()) {
                 int pos = spNewQuestions.getSelectedItemPosition();
                 String newQuestion;
                 if (pos == predefinedQuestions.length) {
                     newQuestion = etNewCustomQuestion.getText().toString().trim();
                     if (newQuestion.isEmpty()) {
-                        Toast.makeText(this, "Please enter a custom question", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this,
+                                "Please enter a custom question",
+                                Toast.LENGTH_SHORT).show();
                         return;
                     }
                 } else {
                     newQuestion = predefinedQuestions[pos];
                 }
+
                 String newAnswer = etNewAnswer.getText().toString().trim();
                 if (newAnswer.isEmpty()) {
-                    Toast.makeText(this, "Please provide an answer for the new security question", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this,
+                            "Please provide an answer for the new question",
+                            Toast.LENGTH_SHORT).show();
                     return;
                 }
                 prefManager.setSecurityQuestion(newQuestion);
@@ -147,14 +182,22 @@ public class ResetPasswordActivity extends AppCompatActivity {
                 questionChanged = true;
             }
 
+            // ── Result feedback ───────────────────────────────────────────
             if (passwordChanged && questionChanged) {
-                Toast.makeText(this, "Password and security question updated", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this,
+                        "Password and security question updated",
+                        Toast.LENGTH_SHORT).show();
             } else if (passwordChanged) {
-                Toast.makeText(this, "Password updated successfully", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this,
+                        "Password updated successfully",
+                        Toast.LENGTH_SHORT).show();
             } else if (questionChanged) {
-                Toast.makeText(this, "Security question updated successfully", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this,
+                        "Security question updated successfully",
+                        Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(this, "No changes selected", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this,
+                        "No changes selected", Toast.LENGTH_SHORT).show();
                 return;
             }
             finish();

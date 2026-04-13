@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationListener; // Essential for the fix
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -46,6 +47,10 @@ public class DestinationPickerActivity extends AppCompatActivity {
     private GeoPoint             selectedPoint;
     private Marker               currentMarker;
 
+    // Added for the location fix
+    private LocationManager locationManager;
+    private LocationListener locationListener;
+
     private final List<String>         suggestionNames   = new ArrayList<>();
     private final List<PlaceSuggestion> suggestionObjects = new ArrayList<>();
     private ArrayAdapter<String>        suggestionsAdapter;
@@ -76,10 +81,11 @@ public class DestinationPickerActivity extends AppCompatActivity {
         mapView.setTileSource(TileSourceFactory.MAPNIK);
         mapView.setMultiTouchControls(true);
         mapView.getController().setZoom(12.0);
+
+        // This method now handles the active location fix
         centerOnCurrentLocation();
 
-        // Custom adapter — internal filtering disabled so results are not
-        // cleared when the user taps a suggestion and the text updates.
+        // Custom adapter — internal filtering disabled
         suggestionsAdapter = new ArrayAdapter<String>(
                 this, android.R.layout.simple_dropdown_item_1line, suggestionNames) {
             @Override
@@ -110,9 +116,6 @@ public class DestinationPickerActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(
                     CharSequence s, int start, int before, int count) {
-                // Cancel any pending search before posting the new one.
-                // FIX: this runnable is also cancelled in onPause/onDestroy
-                // so it never fires after the activity is gone.
                 if (searchRunnable != null)
                     handler.removeCallbacks(searchRunnable);
                 searchRunnable = () -> fetchSuggestions(s.toString());
@@ -148,6 +151,7 @@ public class DestinationPickerActivity extends AppCompatActivity {
         btnConfirm.setOnClickListener(v -> confirmSelection());
     }
 
+    @SuppressWarnings("MissingPermission")
     private void centerOnCurrentLocation() {
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION)
@@ -155,25 +159,47 @@ public class DestinationPickerActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     LOCATION_PERMISSION_REQUEST);
+            // Default center if no permission
             mapView.getController().setCenter(new GeoPoint(23.8103, 90.4125));
             return;
         }
-        try {
-            LocationManager lm =
-                    (LocationManager) getSystemService(LOCATION_SERVICE);
-            if (lm == null) return;
-            Location location =
-                    lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            if (location == null)
-                location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            if (location != null) {
-                GeoPoint current = new GeoPoint(
-                        location.getLatitude(), location.getLongitude());
-                mapView.getController().setCenter(current);
+
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        if (locationManager == null) return;
+
+        // Try to get a fast last known location first so map isn't blank
+        Location lastGps = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        Location lastNet = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        Location best = (lastGps != null) ? lastGps : lastNet;
+
+        if (best != null) {
+            mapView.getController().setCenter(new GeoPoint(best.getLatitude(), best.getLongitude()));
+        } else {
+            // If absolutely no last location, center on a default until fix arrives
+            mapView.getController().setCenter(new GeoPoint(23.8103, 90.4125));
+        }
+
+        // Setup active listener to catch the fix as soon as GPS/Network updates
+        locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(@NonNull Location location) {
+                GeoPoint current = new GeoPoint(location.getLatitude(), location.getLongitude());
+                mapView.getController().animateTo(current);
                 mapView.getController().setZoom(14.0);
+                // We got the fix, we can stop listening now to save battery
+                locationManager.removeUpdates(this);
             }
-        } catch (SecurityException e) {
-            e.printStackTrace();
+            @Override public void onProviderDisabled(@NonNull String provider) {}
+            @Override public void onProviderEnabled(@NonNull String provider) {}
+            @Override public void onStatusChanged(String provider, int status, Bundle extras) {}
+        };
+
+        // Request updates from both to ensure we get a fix quickly
+        if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+        }
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
         }
     }
 
@@ -244,11 +270,6 @@ public class DestinationPickerActivity extends AppCompatActivity {
 
             } catch (Exception e) {
                 e.printStackTrace();
-                runOnUiThread(() ->
-                        Toast.makeText(this,
-                                "Search error: " + e.getMessage(),
-                                Toast.LENGTH_SHORT).show()
-                );
             } finally {
                 if (connection != null) connection.disconnect();
             }
@@ -309,19 +330,23 @@ public class DestinationPickerActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         mapView.onPause();
-        // FIX: cancel any pending Photon search so it does not fire
-        // after the activity is paused and update a dead UI reference.
+        // Clean up search runnable
         if (searchRunnable != null) {
             handler.removeCallbacks(searchRunnable);
-            searchRunnable = null;
+        }
+        // Clean up location listener to save battery
+        if (locationManager != null && locationListener != null) {
+            locationManager.removeUpdates(locationListener);
         }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Belt-and-suspenders cleanup — also cancels any callbacks
-        // that were posted between onPause and onDestroy.
+        // Final cleanup
+        if (locationManager != null && locationListener != null) {
+            locationManager.removeUpdates(locationListener);
+        }
         handler.removeCallbacksAndMessages(null);
     }
 }
