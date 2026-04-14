@@ -193,62 +193,62 @@ All modes are independently configurable:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                       APP FIRST LAUNCH                          │
-│  Set numeric password (4+ digits, no leading zero)              │
-│  Set security question + answer                                 │
+│                       APP FIRST LAUNCH                                      │
+│  Set numeric password (4+ digits, no leading zero)                          │
+│  Set security question + answer                                             │
 └────────────────────────────┬────────────────────────────────────┘
-                             │
-                             ▼
+                                   │
+                                   ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                     CALCULATOR MODE                             │
-│  Type password → press = → Settings opens                       │
-│  Wrong input → silent math evaluation, no trace                 │
+│                     CALCULATOR MODE                                         │
+│  Type password → press = → Settings opens                                  │
+│  Wrong input → silent math evaluation, no trace                             │
 └────────────────────────────┬────────────────────────────────────┘
-                             │ correct password
-                             ▼
+                                   │ correct password
+                                   ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                   EMERGENCY SETTINGS HUB                        │
-│  Add up to 3 contacts  •  Set starting point                    │
-│  Set destination (interactive map)  •  Configure trigger        │
-│  Tap ACTIVATE                                                   │
+│                   EMERGENCY SETTINGS HUB                                    │
+│  Add up to 3 contacts  •  Set starting point                                │
+│  Set destination (interactive map)  •  Configure trigger                    │
+│  Tap ACTIVATE                                                               │
 └────────────────────────────┬────────────────────────────────────┘
-                             │
-                             ▼
+                                   │
+                                   ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│               BACKGROUND MONITORING (always-on)                 │
-│  EmergencyService (foreground, START_STICKY)                    │
-│  ├── GPS + Network listeners → location stored every 30s        │
-│  ├── ShakeDetector (accelerometer, 150ms debounce)              │
-│  └── BroadcastReceiver (power button via screen on/off)         │
+│               BACKGROUND MONITORING (always-on)                             │
+│  EmergencyService (foreground, START_STICKY)                                │
+│  ├── GPS + Network listeners → location stored every 30s                   │
+│  ├── ShakeDetector (accelerometer, 150ms debounce)                          │
+│  └── BroadcastReceiver (power button via screen on/off)                     │
 └────────────────────────────┬────────────────────────────────────┘
                              │ trigger gesture detected
                              │ 60-second cooldown armed instantly
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│               EMERGENCY DISPATCH (EmergencyHandler)             │
-│                                                                 │
-│  Step 1 — Resolve location                                      │
-│    Live fix ≤5 min old?  → use instantly (zero delay) ✅        │
-│    No live fix?  → requestLocationUpdates(0,0), 10s timeout     │
-│    Timeout?  → getLastKnownLocation fallback chain              │
-│    All null?  → send with "(Location unavailable)" note         │
-│                                                                 │
-│  Step 2 — Build SMS                                             │
-│    "I was going from [Human-readable Start]                     │
-│     to [Human-readable Destination].                            │
-│     I am in danger. Please help.                                │
-│     My location: maps.google.com?q=23.810300,90.412500"         │
-│    (Locale.US format — scientific notation impossible)          │
-│                                                                 │
-│  Step 3 — Send SMS to ALL contacts simultaneously               │
-│    Success → proceed to calls immediately                       │
-│    Blocked → open SMS app (manual) → wait 6s → proceed          │
-│                                                                 │
-│  Step 4 — Sequential calls                                      │
-│    Contact 1 → OFFHOOK → IDLE → 2s pause                        │
-│    Contact 2 → OFFHOOK → IDLE → 2s pause                        │
-│    Contact 3 → OFFHOOK → IDLE → stopSelf()                      │
-│    (45s safety timeout per contact guards against stuck states) │
+│               EMERGENCY DISPATCH (EmergencyHandler)                         │
+│                                                                             │
+│  Step 1 — Resolve location                                                  │
+│    Live fix ≤5 min old?  → use instantly (zero delay) ✅                   │
+│    No live fix?  → requestLocationUpdates(0,0), 10s timeout                │
+│    Timeout?  → getLastKnownLocation fallback chain                         │
+│    All null?  → send with "(Location unavailable)" note                    │
+│                                                                             │
+│  Step 2 — Build SMS                                                         │
+│    "I was going from [Human-readable Start]                                 │
+│     to [Human-readable Destination].                                        │
+│     I am in danger. Please help.                                            │
+│     My location: maps.google.com?q=23.810300,90.412500"                     │
+│    (Locale.US format — scientific notation impossible)                      │
+│                                                                             │
+│  Step 3 — Send SMS to ALL contacts simultaneously                           │
+│    Success → proceed to calls immediately                                  │
+│    Blocked → open SMS app (manual) → wait 6s → proceed                    │
+│                                                                             │
+│  Step 4 — Sequential calls                                                  │
+│    Contact 1 → OFFHOOK → IDLE → 2s pause                                  │
+│    Contact 2 → OFFHOOK → IDLE → 2s pause                                  │
+│    Contact 3 → OFFHOOK → IDLE → stopSelf()                                │
+│    (45s safety timeout per contact guards against stuck states)             │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
