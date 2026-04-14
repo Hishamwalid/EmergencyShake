@@ -221,9 +221,9 @@ All modes are independently configurable:
 │  ├── ShakeDetector (accelerometer, 150ms debounce)                          │
 │  └── BroadcastReceiver (power button via screen on/off)                     │
 └────────────────────────────┬────────────────────────────────────┘
-                             │ trigger gesture detected
-                             │ 60-second cooldown armed instantly
-                             ▼
+                                   │ trigger gesture detected
+                                   │ 60-second cooldown armed instantly
+                                   ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │               EMERGENCY DISPATCH (EmergencyHandler)                         │
 │                                                                             │
