@@ -7,7 +7,7 @@
   <img src="https://img.shields.io/badge/Language-Java%2017-orange?style=for-the-badge&logo=java" />
   <img src="https://img.shields.io/badge/Min%20SDK-24%20(Android%207.0)-blue?style=for-the-badge" />
   <img src="https://img.shields.io/badge/Target%20SDK-34%20(Android%2014)-blue?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Version-1.0.0-success?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Version-2.1.1-success?style=for-the-badge" />
   <img src="https://img.shields.io/badge/License-Academic-lightgrey?style=for-the-badge" />
 </p>
 
