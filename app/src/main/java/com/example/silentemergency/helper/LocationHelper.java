@@ -9,17 +9,13 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-
 import com.example.silentemergency.utils.PrefManager;
-
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class LocationHelper {
-
-    private static final String TAG                = "LocationHelper";
-    private static final long   FRESH_FIX_TIMEOUT = 8000L;
-
+    private static final String  TAG                 = "LocationHelper";
+    private static final long    FRESH_FIX_TIMEOUT  = 8000L;
     private final Context context;
 
     public LocationHelper(Context context) {
@@ -63,7 +59,8 @@ public class LocationHelper {
         Runnable timeout = () -> {
             if (done.compareAndSet(false, true)) {
                 if (lm != null && ref[0] != null)
-                    try { lm.removeUpdates(ref[0]); } catch (Exception ignored) {}
+                    try { lm.removeUpdates(ref[0]);
+                    } catch (Exception ignored) {}
                 Log.w(TAG, "Fresh fix timed out — using last-known");
                 callback.onMessageReady(
                         buildMessage(route, getLastKnownFallback(lm)));
@@ -105,7 +102,7 @@ public class LocationHelper {
         }
 
         if (registered) {
-            handler.postDelayed(timeout, FRESH_FIX_TIMEOUT);
+            handler.postDelayed(timeout,  FRESH_FIX_TIMEOUT );
         } else {
             // Layer 3: no provider available — use last known immediately
             callback.onMessageReady(
@@ -115,13 +112,18 @@ public class LocationHelper {
 
     // ── Message builders ──────────────────────────────────────────────────────
     private String buildRouteInfo(String start, String dest) {
+        // Use the readable destination label if it exists.
+        // Falls back to raw coordinates if the user pinned the map manually.
+        PrefManager pref  = new PrefManager(context);
+        String destLabel  = pref.getDestinationLabel();
+        String destString = (!destLabel.isEmpty()) ? destLabel : dest;
         if (start != null && !start.isEmpty() &&
-                dest != null && !dest.isEmpty())
-            return "I was going from " + start + " to " + dest + ". ";
+                destString != null && !destString.isEmpty())
+            return "I was going from " + start + " to " + destString + ". ";
         else if (start != null && !start.isEmpty())
             return "I was at " + start + ". ";
-        else if (dest != null && !dest.isEmpty())
-            return "I was heading to " + dest + ". ";
+        else if (destString != null && !destString.isEmpty())
+            return "I was heading to " + destString + ". ";
         return "";
     }
 

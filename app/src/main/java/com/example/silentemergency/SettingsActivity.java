@@ -29,7 +29,6 @@ import com.example.silentemergency.service.EmergencyService;
 import com.example.silentemergency.utils.PrefManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -42,7 +41,6 @@ import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SettingsActivity extends AppCompatActivity {
-
     private PrefManager prefManager;
     private LinearLayout contactsContainer;
     private Button btnToggleProtection;
@@ -53,18 +51,16 @@ public class SettingsActivity extends AppCompatActivity {
     private long startTime = 0;
     private final Handler timerHandler = new Handler(Looper.getMainLooper());
     private Runnable timerRunnable;
-
     private LocationListener activeLocationListener = null;
     private final Handler locationHandler = new Handler(Looper.getMainLooper());
     private Runnable locationTimeoutRunnable = null;
     private final AtomicBoolean locationFetchDone = new AtomicBoolean(false);
-
     private int pendingEditIndex = -1;
+
     private static final int COLOR_RED = 0xFFFF4444;
     private static final int COLOR_GREEN = 0xFF4CAF50;
     private static final int REQUEST_CURRENT_LOCATION = 200;
     private static final long LOCATION_TIMEOUT_MS = 10_000L;
-
     private static final String KEY_IS_PROTECTION_ACTIVE = "is_protection_active";
     private static final String KEY_PROTECTION_START_TIME = "protection_start_time";
 
@@ -77,14 +73,26 @@ public class SettingsActivity extends AppCompatActivity {
                     });
 
     private final ActivityResultLauncher<Intent> destinationLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+            registerForActivityResult(
+                    new ActivityResultContracts.StartActivityForResult(),
                     result -> {
-                        if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        if (result.getResultCode() == RESULT_OK
+                                && result.getData() != null) {
                             String address = result.getData().getStringExtra("address");
                             if (address != null && !address.isEmpty()) {
                                 prefManager.setDestination(address);
+                                // FIX: save the readable label if the user searched for a place.
+                                // If they tapped the map, no label exists — clear the old one.
+                                String label = result.getData().getStringExtra("label");
+                                if (label != null && !label.isEmpty()) {
+                                    prefManager.setDestinationLabel(label);
+                                } else {
+                                    prefManager.clearDestinationLabel();
+                                }
                                 updateDestinationDisplay();
-                                Toast.makeText(this, "Destination saved: " + address, Toast.LENGTH_SHORT).show();
+                                Toast.makeText(this,
+                                        "Destination saved",
+                                        Toast.LENGTH_SHORT).show();
                             }
                         }
                     });
@@ -94,7 +102,6 @@ public class SettingsActivity extends AppCompatActivity {
         prefManager = new PrefManager(this);
         if (prefManager.isDarkMode()) setTheme(R.style.AppTheme_Dark);
         else setTheme(R.style.AppTheme_Light);
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
@@ -186,8 +193,17 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void updateDestinationDisplay() {
-        String dest = prefManager.getDestination();
-        tvDestination.setText(dest.isEmpty() ? "Destination: not set" : "Destination: " + dest);
+        String dest  = prefManager.getDestination();
+        String label = prefManager.getDestinationLabel();
+        if (dest.isEmpty()) {
+            tvDestination.setText("Destination: not set");
+        } else if (!label.isEmpty()) {
+            // Show the readable name in the UI
+            tvDestination.setText("Destination: " + label);
+        } else {
+            // Fallback to coordinates if user tapped the map
+            tvDestination.setText("Destination: " + dest);
+        }
     }
 
     @SuppressWarnings("MissingPermission")
@@ -225,6 +241,7 @@ public class SettingsActivity extends AppCompatActivity {
                 });
             }
         };
+
         locationHandler.postDelayed(locationTimeoutRunnable, LOCATION_TIMEOUT_MS);
 
         activeLocationListener = new LocationListener() {
@@ -236,7 +253,6 @@ public class SettingsActivity extends AppCompatActivity {
                     processLocation(location);
                 }
             }
-
             @Override public void onStatusChanged(String p, int s, Bundle e) {}
             @Override public void onProviderEnabled(String p) {}
             @Override public void onProviderDisabled(String p) {}
@@ -261,7 +277,6 @@ public class SettingsActivity extends AppCompatActivity {
     private void processLocation(Location location) {
         double lat = location.getLatitude();
         double lng = location.getLongitude();
-
         new Thread(() -> {
             String addr = getAddressFromLatLng(lat, lng);
             if (addr != null) saveAndDisplayStartingPoint(addr);
@@ -277,7 +292,9 @@ public class SettingsActivity extends AppCompatActivity {
                 String line = list.get(0).getAddressLine(0);
                 if (line != null && !line.isEmpty()) return line;
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
@@ -288,6 +305,7 @@ public class SettingsActivity extends AppCompatActivity {
                     + "&lat=" + lat + "&limit=1";
             connection = (HttpURLConnection) new URL(url).openConnection();
             connection.setRequestMethod("GET");
+            // FIX: timeouts were missing — background thread could hang forever
             connection.setConnectTimeout(8000);
             connection.setReadTimeout(8000);
             BufferedReader in = new BufferedReader(
@@ -296,14 +314,11 @@ public class SettingsActivity extends AppCompatActivity {
             String line;
             while ((line = in.readLine()) != null) sb.append(line);
             in.close();
-
             JSONObject json     = new JSONObject(sb.toString());
             JSONArray  features = json.getJSONArray("features");
             String     finalAddr;
-
             if (features.length() > 0) {
-                JSONObject props   = features.getJSONObject(0)
-                        .getJSONObject("properties");
+                JSONObject props   = features.getJSONObject(0).getJSONObject("properties");
                 String name    = props.optString("name",        "");
                 String street  = props.optString("street",      "");
                 String housenr = props.optString("housenumber", "");
@@ -311,14 +326,12 @@ public class SettingsActivity extends AppCompatActivity {
                         props.optString("town",
                                 props.optString("village",     "")));
                 String country = props.optString("country",     "");
-
                 StringBuilder addr = new StringBuilder();
                 if (!name.isEmpty())    addr.append(name);
                 if (!housenr.isEmpty()) { if (addr.length()>0) addr.append(" ");  addr.append(housenr); }
                 if (!street.isEmpty())  { if (addr.length()>0) addr.append(", "); addr.append(street);  }
                 if (!city.isEmpty())    { if (addr.length()>0) addr.append(", "); addr.append(city);    }
                 if (!country.isEmpty()) { if (addr.length()>0) addr.append(", "); addr.append(country); }
-
                 finalAddr = addr.length() > 0
                         ? addr.toString()
                         : String.format(Locale.US, "%.6f,%.6f", lat, lng);
@@ -338,7 +351,6 @@ public class SettingsActivity extends AppCompatActivity {
     private void saveAndDisplayStartingPoint(String address) {
         prefManager.setStartingPoint(address);
         String timestamp = new SimpleDateFormat("HH:mm, dd MMM", Locale.getDefault()).format(new Date());
-
         runOnUiThread(() -> {
             setLocationButtonLoading(false);
             tvStartingPoint.setText("Starting point: " + address + "\n(set at " + timestamp + ")");
@@ -383,13 +395,10 @@ public class SettingsActivity extends AppCompatActivity {
             String phone = inputNumber.getText().toString().trim();
             if (!phone.isEmpty()) {
                 if (isPhoneNumberDuplicate(phone)) {
-                    Toast.makeText(this,
-                            "This number is already in your emergency contacts",
-                            Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "This number is already in your emergency contacts", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                contacts.add((inputName.getText().toString().trim().isEmpty() ?
-                        "Emergency" : inputName.getText().toString().trim()) + ":" + phone);
+                contacts.add((inputName.getText().toString().trim().isEmpty() ? "Emergency" : inputName.getText().toString().trim()) + ":" + phone);
                 saveContacts();
                 refreshContactList();
             }
@@ -412,24 +421,21 @@ public class SettingsActivity extends AppCompatActivity {
                 try (Cursor p = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
                         ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=?", new String[]{id}, null)) {
                     if (p != null && p.moveToFirst()) {
-                        String clean = p.getString(p.getColumnIndexOrThrow(
-                                        ContactsContract.CommonDataKinds.Phone.NUMBER))
+                        String clean = p.getString(p.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER))
                                 .replaceAll("[\\s\\-()]", "");
-
                         if (isPhoneNumberDuplicate(clean)) {
-                            Toast.makeText(this,
-                                    "This number is already in your emergency contacts",
-                                    Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "This number is already in your emergency contacts", Toast.LENGTH_SHORT).show();
                             return;
                         }
-
                         contacts.add(name + ":" + clean);
                         saveContacts();
                         refreshContactList();
                     }
                 }
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void loadContacts() {
@@ -469,11 +475,10 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (!locationFetchDone.get()) {
-            locationFetchDone.set(true);
-            locationHandler.removeCallbacks(locationTimeoutRunnable);
-            cleanupLocationListener((LocationManager) getSystemService(LOCATION_SERVICE));
-        }
+        // FIX: always clean up regardless of whether a fetch was in progress
+        locationFetchDone.set(true);
+        locationHandler.removeCallbacks(locationTimeoutRunnable);
+        cleanupLocationListener((LocationManager) getSystemService(LOCATION_SERVICE));
         if (timerRunnable != null) timerHandler.removeCallbacks(timerRunnable);
     }
 }

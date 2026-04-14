@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 public class PrefManager {
-
     private static final String PREF_NAME              = "SilentEmergencyPrefs";
     private static final String KEY_IS_FIRST_TIME      = "isFirstTime";
     private static final String KEY_PASSWORD           = "password";
@@ -65,6 +64,7 @@ public class PrefManager {
     public String getSecurityQuestion() {
         return prefs.getString(KEY_SECURITY_QUESTION, "");
     }
+
     public void setSecurityAnswer(String answer) {
         editor.putString(KEY_SECURITY_ANSWER, answer.toLowerCase());
         editor.apply();
@@ -82,6 +82,7 @@ public class PrefManager {
         editor.putFloat(KEY_SHAKE_SENSITIVITY, value);
         editor.apply();
     }
+
     public int getShakeCount() {
         return prefs.getInt(KEY_SHAKE_COUNT, 3);
     }
@@ -89,6 +90,7 @@ public class PrefManager {
         editor.putInt(KEY_SHAKE_COUNT, count);
         editor.apply();
     }
+
     public int getShakeWindow() {
         return prefs.getInt(KEY_SHAKE_WINDOW, 5);
     }
@@ -114,6 +116,7 @@ public class PrefManager {
     public String getEmergencyNumber(int slot) {
         return prefs.getString("emergency_number_" + slot, "");
     }
+
     // Legacy single-contact methods — kept for compatibility
     public void setEmergencyNumber(String number) {
         editor.putString(KEY_EMERGENCY_NUMBER, number);
@@ -140,12 +143,33 @@ public class PrefManager {
     public String getStartingPoint() {
         return prefs.getString(KEY_STARTING_POINT, "");
     }
+
     public void setDestination(String address) {
         editor.putString(KEY_DESTINATION, address);
         editor.apply();
     }
     public String getDestination() {
         return prefs.getString(KEY_DESTINATION, "");
+    }
+
+    // ── Destination display label ─────────────────────────────────────────────
+    // Stores the human-readable name of the destination (e.g. "Dhanmondi 27, Dhaka")
+    // so the emergency SMS reads naturally instead of showing raw coordinates.
+    // Empty string means no label — LocationHelper falls back to raw coordinates.
+    private static final String KEY_DESTINATION_LABEL = "destination_label";
+
+    public void setDestinationLabel(String label) {
+        editor.putString(KEY_DESTINATION_LABEL, label);
+        editor.apply();
+    }
+
+    public String getDestinationLabel() {
+        return prefs.getString(KEY_DESTINATION_LABEL, "");
+    }
+
+    public void clearDestinationLabel() {
+        editor.remove(KEY_DESTINATION_LABEL);
+        editor.apply();
     }
 
     // ── Gesture mode ──────────────────────────────────────────────────────────
@@ -165,6 +189,7 @@ public class PrefManager {
         editor.putInt(KEY_POWER_SHAKE_WINDOW, seconds);
         editor.apply();
     }
+
     public void setPowerPressCount(int count) {
         editor.putInt(KEY_POWER_PRESS_COUNT, count);
         editor.apply();
@@ -172,6 +197,7 @@ public class PrefManager {
     public int getPowerPressCount() {
         return prefs.getInt(KEY_POWER_PRESS_COUNT, 3);
     }
+
     public void setPowerPressWindow(int seconds) {
         editor.putInt(KEY_POWER_PRESS_WINDOW, seconds);
         editor.apply();

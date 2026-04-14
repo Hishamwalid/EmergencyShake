@@ -4,7 +4,7 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationListener; // Essential for the fix
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -28,7 +28,6 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.Overlay;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -38,7 +37,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DestinationPickerActivity extends AppCompatActivity {
-
     private MapView              mapView;
     private AutoCompleteTextView searchBox;
     private Button               btnConfirm;
@@ -55,13 +53,17 @@ public class DestinationPickerActivity extends AppCompatActivity {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Runnable      searchRunnable;
 
-    private static final int LOCATION_PERMISSION_REQUEST = 400;
+    private static final int  LOCATION_PERMISSION_REQUEST  = 400;
+
+    // Stores the human-readable name when user selects from search autocomplete.
+    // Null when user taps the map directly (no name available in that case).
+    private String selectedLabel = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Configuration.getInstance().load(
-                this, getSharedPreferences("osmdroid", MODE_PRIVATE));
+                this, getSharedPreferences("osmdroid",  MODE_PRIVATE ));
         setContentView(R.layout.activity_destination_picker);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -95,7 +97,6 @@ public class DestinationPickerActivity extends AppCompatActivity {
                         results.count  = suggestionNames.size();
                         return results;
                     }
-
                     @Override
                     protected void publishResults(CharSequence constraint,
                                                   FilterResults results) {
@@ -104,13 +105,12 @@ public class DestinationPickerActivity extends AppCompatActivity {
                 };
             }
         };
-
         searchBox.setAdapter(suggestionsAdapter);
         searchBox.setThreshold(1);
+
         searchBox.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(
                     CharSequence s, int start, int count, int after) {}
-
             @Override
             public void onTextChanged(
                     CharSequence s, int start, int before, int count) {
@@ -119,14 +119,16 @@ public class DestinationPickerActivity extends AppCompatActivity {
                 searchRunnable = () -> fetchSuggestions(s.toString());
                 handler.postDelayed(searchRunnable, 400);
             }
-
-            @Override public void afterTextChanged(Editable s) {}
+            @Override
+            public void afterTextChanged(Editable s) {}
         });
 
         searchBox.setOnItemClickListener((parent, view, position, id) -> {
             if (position < suggestionObjects.size()) {
                 PlaceSuggestion selected = suggestionObjects.get(position);
                 GeoPoint point = new GeoPoint(selected.lat, selected.lon);
+                // FIX: save the human-readable name so the SMS uses it
+                selectedLabel = selected.name;
                 selectPoint(point);
                 mapView.getController().animateTo(point);
                 mapView.getController().setZoom(16.0);
@@ -142,6 +144,8 @@ public class DestinationPickerActivity extends AppCompatActivity {
             public boolean onSingleTapConfirmed(MotionEvent e, MapView mapView) {
                 GeoPoint point = (GeoPoint) mapView.getProjection()
                         .fromPixels((int) e.getX(), (int) e.getY());
+                // User tapped manually — no readable label available
+                selectedLabel = null;
                 selectPoint(point);
                 return true;
             }
@@ -188,7 +192,6 @@ public class DestinationPickerActivity extends AppCompatActivity {
                 // We got the fix, we can stop listening now to save battery
                 locationManager.removeUpdates(this);
             }
-
             @Override public void onProviderDisabled(@NonNull String provider) {}
             @Override public void onProviderEnabled(@NonNull String provider) {}
             @Override public void onStatusChanged(String provider, int status, Bundle extras) {}
@@ -216,7 +219,6 @@ public class DestinationPickerActivity extends AppCompatActivity {
                 connection.setRequestMethod("GET");
                 connection.setConnectTimeout(8000);
                 connection.setReadTimeout(8000);
-
                 BufferedReader in = new BufferedReader(
                         new InputStreamReader(connection.getInputStream()));
                 StringBuilder response = new StringBuilder();
@@ -236,7 +238,6 @@ public class DestinationPickerActivity extends AppCompatActivity {
                             .getJSONArray("coordinates");
                     double lon = coords.getDouble(0);
                     double lat = coords.getDouble(1);
-
                     JSONObject    props   = feature.getJSONObject("properties");
                     String        name    = props.optString("name", "");
                     String        city    = props.optString("city", "");
@@ -293,11 +294,14 @@ public class DestinationPickerActivity extends AppCompatActivity {
                     Toast.LENGTH_SHORT).show();
             return;
         }
-
         Intent intent = new Intent();
+        // Always send the coordinates
         intent.putExtra("address",
-                selectedPoint.getLatitude() + ","
-                        + selectedPoint.getLongitude());
+                selectedPoint.getLatitude() + "," + selectedPoint.getLongitude());
+        // Also send the human-readable label if one exists (from autocomplete selection)
+        if (selectedLabel != null && !selectedLabel.isEmpty()) {
+            intent.putExtra("label", selectedLabel);
+        }
         setResult(RESULT_OK, intent);
         finish();
     }
