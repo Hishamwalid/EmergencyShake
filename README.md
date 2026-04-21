@@ -193,41 +193,41 @@ All modes are independently configurable:
 ## 🔄 Complete Emergency Flow
 
 ```
-┌────────────────────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────┐
 │                        APP FIRST LAUNCH                            │
 │  Set numeric password (4+ digits, no leading zero)                 │
 │  Set security question + answer                                    │
-└──────────────────────────────┬─────────────────────────────────────┘
-                               │
-                               ▼
-┌────────────────────────────────────────────────────────────────────┐
+└──────────────────────────────┬───────────────────────────┘
+                                     │
+                                     ▼
+┌──────────────────────────────────────────────────────────┐
 │                      CALCULATOR MODE                               │
-│  Type password → press = → Emergency Settings opens                │
+│  Type password → press = → Emergency Settings opens               │
 │  Wrong input → silent math evaluation, display unchanged           │
-└──────────────────────────────┬─────────────────────────────────────┘
-                               │ correct password
-                               ▼
-┌────────────────────────────────────────────────────────────────────┐
+└──────────────────────────────┬───────────────────────────┘
+                                     │ correct password
+                                     ▼
+┌──────────────────────────────────────────────────────────┐
 │                    EMERGENCY SETTINGS HUB                          │
 │  Add up to 3 emergency contacts                                    │
 │  Set starting point (GPS + reverse geocode + timestamp)            │
 │  Set destination (interactive map + place name stored)             │
 │  Configure trigger mode + sensitivity                              │
 │  Tap ACTIVATE                                                      │
-└──────────────────────────────┬─────────────────────────────────────┘
-                               │
-                               ▼
-┌────────────────────────────────────────────────────────────────────┐
+└──────────────────────────────┬────────────── ────────────┘
+                                     │
+                                     ▼
+┌──────────────────────────────────────────────────────────┐
 │                BACKGROUND MONITORING (always-on)                   │
 │  EmergencyService (foreground, START_STICKY)                       │
-│  ├── GPS + Network listeners → location stored every 30s/10m       │
+│  ├── GPS + Network listeners → location stored every 30s/10m      │
 │  ├── ShakeDetector (accelerometer, 150ms debounce)                 │
 │  └── BroadcastReceiver (power button via screen on/off events)     │
-└──────────────────────────────┬─────────────────────────────────────┘
-                               │ trigger gesture detected
-                               │ 60-second cooldown armed instantly
-                               ▼
-┌────────────────────────────────────────────────────────────────────┐
+└──────────────────────────────┬───────────────────────────┘
+                                     │ trigger gesture detected
+                                     │ 60-second cooldown armed instantly
+                                     ▼
+┌──────────────────────────────────────────────────────────┐
 │               EMERGENCY DISPATCH (EmergencyHandler)                │
 │                                                                    │
 │  Location resolution:                                              │
@@ -244,14 +244,14 @@ All modes are independently configurable:
 │                                                                    │
 │  Send SMS to ALL contacts simultaneously                           │
 │    Success → start calling immediately                             │
-│    Blocked → open SMS app pre-filled → wait 6s → start calling     │
+│    Blocked → open SMS app pre-filled → wait 6s → start calling   │
 │                                                                    │
 │  Sequential calls:                                                 │
-│    Contact 1 → OFFHOOK → IDLE → 2s pause                           │
-│    Contact 2 → OFFHOOK → IDLE → 2s pause                           │
-│    Contact 3 → OFFHOOK → IDLE → stopSelf()                         │
+│    Contact 1 → OFFHOOK → IDLE → 2s pause                         │
+│    Contact 2 → OFFHOOK → IDLE → 2s pause                         │
+│    Contact 3 → OFFHOOK → IDLE → stopSelf()                       │
 │    (45s safety timeout per contact)                                │
-└────────────────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────┘
 ```
 
 ---
