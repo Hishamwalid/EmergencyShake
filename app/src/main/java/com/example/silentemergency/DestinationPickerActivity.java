@@ -43,7 +43,6 @@ public class DestinationPickerActivity extends AppCompatActivity {
     private GeoPoint             selectedPoint;
     private Marker               currentMarker;
 
-    // Added for the location fix
     private LocationManager locationManager;
     private LocationListener locationListener;
 
@@ -55,8 +54,6 @@ public class DestinationPickerActivity extends AppCompatActivity {
 
     private static final int  LOCATION_PERMISSION_REQUEST  = 400;
 
-    // Stores the human-readable name when user selects from search autocomplete.
-    // Null when user taps the map directly (no name available in that case).
     private String selectedLabel = null;
 
     @Override
@@ -81,10 +78,8 @@ public class DestinationPickerActivity extends AppCompatActivity {
         mapView.setMultiTouchControls(true);
         mapView.getController().setZoom(12.0);
 
-        // This method now handles the active location fix
         centerOnCurrentLocation();
 
-        // Custom adapter — internal filtering disabled
         suggestionsAdapter = new ArrayAdapter<String>(
                 this, android.R.layout.simple_dropdown_item_1line, suggestionNames) {
             @Override
@@ -127,11 +122,16 @@ public class DestinationPickerActivity extends AppCompatActivity {
             if (position < suggestionObjects.size()) {
                 PlaceSuggestion selected = suggestionObjects.get(position);
                 GeoPoint point = new GeoPoint(selected.lat, selected.lon);
-                // FIX: save the human-readable name so the SMS uses it
                 selectedLabel = selected.name;
                 selectPoint(point);
                 mapView.getController().animateTo(point);
                 mapView.getController().setZoom(16.0);
+
+                // FIX: Explicitly dismiss the suggestion tray
+                searchBox.dismissDropDown();
+                // FIX: Clear focus so the keyboard doesn't pop back up
+                searchBox.clearFocus();
+
                 InputMethodManager imm =
                         (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
                 if (imm != null)
@@ -144,7 +144,6 @@ public class DestinationPickerActivity extends AppCompatActivity {
             public boolean onSingleTapConfirmed(MotionEvent e, MapView mapView) {
                 GeoPoint point = (GeoPoint) mapView.getProjection()
                         .fromPixels((int) e.getX(), (int) e.getY());
-                // User tapped manually — no readable label available
                 selectedLabel = null;
                 selectPoint(point);
                 return true;
@@ -162,7 +161,6 @@ public class DestinationPickerActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     LOCATION_PERMISSION_REQUEST);
-            // Default center if no permission
             mapView.getController().setCenter(new GeoPoint(23.8103, 90.4125));
             return;
         }
@@ -170,7 +168,6 @@ public class DestinationPickerActivity extends AppCompatActivity {
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         if (locationManager == null) return;
 
-        // Try to get a fast last known location first so map isn't blank
         Location lastGps = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         Location lastNet = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         Location best = (lastGps != null) ? lastGps : lastNet;
@@ -178,18 +175,15 @@ public class DestinationPickerActivity extends AppCompatActivity {
         if (best != null) {
             mapView.getController().setCenter(new GeoPoint(best.getLatitude(), best.getLongitude()));
         } else {
-            // If absolutely no last location, center on a default until fix arrives
             mapView.getController().setCenter(new GeoPoint(23.8103, 90.4125));
         }
 
-        // Setup active listener to catch the fix as soon as GPS/Network updates
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(@NonNull Location location) {
                 GeoPoint current = new GeoPoint(location.getLatitude(), location.getLongitude());
                 mapView.getController().animateTo(current);
                 mapView.getController().setZoom(14.0);
-                // We got the fix, we can stop listening now to save battery
                 locationManager.removeUpdates(this);
             }
             @Override public void onProviderDisabled(@NonNull String provider) {}
@@ -197,7 +191,6 @@ public class DestinationPickerActivity extends AppCompatActivity {
             @Override public void onStatusChanged(String provider, int status, Bundle extras) {}
         };
 
-        // Request updates from both to ensure we get a fix quickly
         if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
         }
@@ -265,7 +258,7 @@ public class DestinationPickerActivity extends AppCompatActivity {
                     suggestionNames.clear();
                     suggestionNames.addAll(tempNames);
                     suggestionsAdapter.notifyDataSetChanged();
-                    if (!suggestionNames.isEmpty() && searchBox.isAttachedToWindow())
+                    if (!suggestionNames.isEmpty() && searchBox.isAttachedToWindow() && searchBox.hasFocus())
                         searchBox.showDropDown();
                 });
             } catch (Exception e) {
@@ -295,10 +288,8 @@ public class DestinationPickerActivity extends AppCompatActivity {
             return;
         }
         Intent intent = new Intent();
-        // Always send the coordinates
         intent.putExtra("address",
                 selectedPoint.getLatitude() + "," + selectedPoint.getLongitude());
-        // Also send the human-readable label if one exists (from autocomplete selection)
         if (selectedLabel != null && !selectedLabel.isEmpty()) {
             intent.putExtra("label", selectedLabel);
         }
@@ -334,11 +325,9 @@ public class DestinationPickerActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         mapView.onPause();
-        // Clean up search runnable
         if (searchRunnable != null) {
             handler.removeCallbacks(searchRunnable);
         }
-        // Clean up location listener to save battery
         if (locationManager != null && locationListener != null) {
             locationManager.removeUpdates(locationListener);
         }
@@ -347,7 +336,6 @@ public class DestinationPickerActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Final cleanup
         if (locationManager != null && locationListener != null) {
             locationManager.removeUpdates(locationListener);
         }
