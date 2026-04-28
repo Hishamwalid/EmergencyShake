@@ -13,6 +13,7 @@ public class FirstTimeSetupActivity extends AppCompatActivity {
     private EditText  etPassword, etConfirmPassword, etAnswer, etCustomQuestion;
     private Spinner   spQuestions;
     private Button    btnSave;
+    private LinearLayout layoutPasswordRules; // Added for popup effect
     private PrefManager prefManager;
 
     private final String[] predefinedQuestions = {
@@ -48,6 +49,16 @@ public class FirstTimeSetupActivity extends AppCompatActivity {
         etAnswer         = findViewById(R.id.etAnswer);
         etCustomQuestion = findViewById(R.id.etCustomQuestion);
         btnSave          = findViewById(R.id.btnSave);
+        layoutPasswordRules = findViewById(R.id.layoutPasswordRules); // Added
+
+        // IMPLEMENTING POPUP LOGIC
+        etPassword.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                layoutPasswordRules.setVisibility(View.VISIBLE);
+            } else {
+                layoutPasswordRules.setVisibility(View.GONE);
+            }
+        });
 
         // Build spinner list with "Custom..." appended
         String[] items = new String[predefinedQuestions.length + 1];

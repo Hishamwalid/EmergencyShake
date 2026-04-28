@@ -20,6 +20,7 @@ public class ResetPasswordActivity extends AppCompatActivity {
     private Spinner      spNewQuestions;
     private EditText     etNewCustomQuestion, etNewAnswer;
     private Button       btnSetPassword;
+    private LinearLayout layoutNewPasswordRules; // Added for popup effect
 
     private PrefManager prefManager;
 
@@ -56,6 +57,16 @@ public class ResetPasswordActivity extends AppCompatActivity {
         etNewCustomQuestion = findViewById(R.id.etNewCustomQuestion);
         etNewAnswer       = findViewById(R.id.etNewAnswer);
         btnSetPassword    = findViewById(R.id.btnSetPassword);
+        layoutNewPasswordRules = findViewById(R.id.layoutNewPasswordRules); // Added
+
+        // IMPLEMENTING POPUP LOGIC
+        etNewPassword.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                layoutNewPasswordRules.setVisibility(View.VISIBLE);
+            } else {
+                layoutNewPasswordRules.setVisibility(View.GONE);
+            }
+        });
 
         // Display current question
         String currentQuestion = prefManager.getSecurityQuestion();
